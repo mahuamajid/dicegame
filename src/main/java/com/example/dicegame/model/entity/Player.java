@@ -14,8 +14,8 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-//@EqualsAndHashCode
-//@ToString(exclude = "games")
+@EqualsAndHashCode
+@ToString(exclude = "games")
 public class Player {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

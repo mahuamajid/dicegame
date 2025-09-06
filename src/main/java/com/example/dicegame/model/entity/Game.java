@@ -13,8 +13,8 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-//@EqualsAndHashCode
-//@ToString(exclude = "players")
+@EqualsAndHashCode
+@ToString(exclude = "players")
 public class Game {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
