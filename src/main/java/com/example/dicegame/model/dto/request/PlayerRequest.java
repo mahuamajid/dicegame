@@ -1,4 +1,4 @@
-package com.example.dicegame.model.dto;
+package com.example.dicegame.model.dto.request;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;

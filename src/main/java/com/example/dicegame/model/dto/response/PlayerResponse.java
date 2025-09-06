@@ -1,4 +1,4 @@
-package com.example.dicegame.model.dto;
+package com.example.dicegame.model.dto.response;
 
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
