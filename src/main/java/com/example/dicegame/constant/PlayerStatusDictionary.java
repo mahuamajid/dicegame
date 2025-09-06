@@ -17,7 +17,7 @@ public enum PlayerStatusDictionary {
 
     // Error code & messages
 
-    SUBSCRIPTION_PLAN_FETCH_FAILED("901-004-2001-1", "Failed to fetch player");
+    PLAYER_FETCH_FAILED("901-004-2001-1", "Failed to fetch player");
 
     private final String statusCode;
     private final String message;

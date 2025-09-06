@@ -50,7 +50,7 @@ public class PlayerController {
     }
 
     @Operation(
-            summary = "Retrieve Players",
+            summary = "Retrieve all Players",
             description = "Provides a list of Player with the provided data available in the system"
     )
     @GetMapping("/get-all")
