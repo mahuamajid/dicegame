@@ -11,13 +11,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import static com.example.dicegame.constant.ApiRoutes.GAME;
 import static com.example.dicegame.constant.GameStatusDictionary.*;
-import static com.example.dicegame.constant.PlayerStatusDictionary.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -25,7 +23,7 @@ import static com.example.dicegame.constant.PlayerStatusDictionary.*;
 @Tag(name = "Game",
         description = "API endpoints for managing Games")
 public class GameController {
-    private GameService gameService;
+    private final GameService gameService;
     private final ApiResponseFactory responseFactory;
 
     @Operation(summary = "Create a new Game",
@@ -51,7 +49,7 @@ public class GameController {
             description = "Retrieve scores a Game"
     )
     @GetMapping("/score")
-    public ResponseEntity<ApiResponse<GameResponse>> score() throws PlayerException {
+    public ResponseEntity<ApiResponse<GameResponse>> score() {
         return responseFactory.success(gameService.score(),
                 GAME_FETCH_SUCCESS.getStatusCode(),
                 GAME_FETCH_SUCCESS.getMessage());

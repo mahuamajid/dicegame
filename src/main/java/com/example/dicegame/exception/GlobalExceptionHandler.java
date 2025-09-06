@@ -4,6 +4,7 @@ import com.example.dicegame.model.dto.response.base.ErrorResponse;
 import com.example.dicegame.model.dto.response.base.MetaData;
 import com.example.dicegame.util.DateTimeUtils;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.BadRequestException;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 import static com.example.dicegame.exception.GlobalErrorStatusDictionary.*;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     // Handles validation errors (Bad Request)

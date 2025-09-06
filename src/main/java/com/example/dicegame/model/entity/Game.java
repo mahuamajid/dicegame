@@ -20,6 +20,9 @@ public class Game {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Column(name = "game_name", length = 50, nullable = false)
+    private String gameName;
+
     @Column(name = "started")
     @Builder.Default
     private boolean started = false;

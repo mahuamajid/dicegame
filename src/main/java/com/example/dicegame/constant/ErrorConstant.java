@@ -9,4 +9,7 @@ public class ErrorConstant {
 
     public static final String PLAYER_AGE_REQUIRED = "Age must not be null.";
     public static final String PLAYER_MIN_AGE = "Age must be at least 5.";
+
+    public static final String GAME_NAME_REQUIRED = "Game name is required.";
+    public static final String GAME_NAME_LENGTH = "Game name must be between 2 and 50 characters.";
 }

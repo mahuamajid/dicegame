@@ -11,19 +11,4 @@ import org.springframework.context.annotation.Configuration;
 @Setter
 public class AppProperties {
     private int targetScore = 25;
-    private Dice dice = new Dice();
-    private Http http = new Http();
-
-    @Getter
-    @Setter
-    public static class Dice {
-        private String mode;
-    }
-
-    @Getter
-    @Setter
-    public static class Http {
-        private String url;
-        private int timeoutMs = 2000;
-    }
 }

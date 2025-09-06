@@ -10,6 +10,7 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 public class GameResponse {
+    private String gameName;
     private boolean started;
     private boolean finished;
     private int targetScore;

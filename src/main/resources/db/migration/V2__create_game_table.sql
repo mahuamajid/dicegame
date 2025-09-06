@@ -5,7 +5,7 @@
 
 CREATE TABLE game (
         id                                      SERIAL PRIMARY KEY,
-
+        game_name                               VARCHAR(50) UNIQUE NOT NULL,
         started                                 BOOLEAN DEFAULT FALSE,
         finished                                BOOLEAN DEFAULT FALSE,
         target_score                            INT,
@@ -14,4 +14,4 @@ CREATE TABLE game (
 );
 
 -- Indexes for optimized queries
---CREATE INDEX idx_game_winner_player_id          ON game(winner_player_id);
+CREATE INDEX idx_game_name          ON game(game_name);
