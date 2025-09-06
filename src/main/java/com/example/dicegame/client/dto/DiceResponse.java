@@ -1,4 +1,4 @@
-package com.example.dicegame.model.dto.response;
+package com.example.dicegame.client.dto;
 
 import lombok.*;
 

@@ -54,8 +54,8 @@ logging:
 
 app:
   target-score: 25 # default
-  dice:
-    mode: http # random | http
-  http:
-    url: http://developer-test.hishab.io/api/v1/roll-dice # dice API returning {"value": 1..6}
-    timeout-ms: 2000
+
+feign:
+  client:
+    roll-dice:
+      url: http://localhost:8080
