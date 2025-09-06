@@ -4,8 +4,8 @@ import com.example.dicegame.constant.State;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "player")
@@ -15,7 +15,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
-@ToString(exclude = "games")
+@ToString(exclude = "gameList")
 public class Player {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,5 +42,5 @@ public class Player {
             joinColumns = @JoinColumn(name = "player_id"), // foreign key in join table for Player
             inverseJoinColumns = @JoinColumn(name = "game_id") // foreign key for Game
     )
-    private Set<Game> games = new HashSet<>();
+    private List<Game> gameList = new ArrayList<>();
 }

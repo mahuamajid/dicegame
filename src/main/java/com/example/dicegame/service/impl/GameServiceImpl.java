@@ -34,15 +34,15 @@ public class GameServiceImpl implements GameService {
     @Override
     public StartGameResponse start(GameRequest gameRequest) {
         Game game = createGame(gameRequest);
-        GameResponse gameResponse = addPlayerInGame(game, gameRequest);
-        startGame(game);
+        addPlayerInGame(game, gameRequest);
+        Game startedGame = startGame(game);
         return null;
     }
 
     @Transactional(readOnly = true)
     @Override
     public GameResponse score(Integer gameId) {
-        Game game = gameRepository.findById(gameId).orElseThrow(()-> new RuntimeException("Game not found"));
+        Game game = gameRepository.findById(gameId).orElseThrow(() -> new RuntimeException("Game not found"));
         List<PlayerGame> playerGameList = playerGameRepository.findByGameId(gameId);
         List<PlayerResponse> playerResponseList = playerGameList.stream()
                 .map(playerGame -> mapObject(playerGame.getPlayer(), PlayerResponse.class))
@@ -59,35 +59,31 @@ public class GameServiceImpl implements GameService {
     }
 
     private Game startGame(Game game) {
-        if(game.isStarted()){
+        if (game.isStarted()) {
             throw new RuntimeException("Game already started");
         }
         game.setStarted(Boolean.TRUE);
         return gameRepository.save(game);
     }
 
-    public GameResponse addPlayerInGame(Game game, GameRequest gameRequest) {
-        if(gameRequest.getPlayerIdList().size()<2 || gameRequest.getPlayerIdList().size()>4){
+    public void addPlayerInGame(Game game, GameRequest gameRequest) {
+        if (gameRequest.getPlayerIdList().size() < 2 || gameRequest.getPlayerIdList().size() > 4) {
             throw new RuntimeException("Need 2 to 4 players to play");
         }
         List<Player> playerList = playerRepository.findByIdIn(gameRequest.getPlayerIdList());
-        List<PlayerResponse> playerResponseList = new ArrayList<>();
         playerList.forEach(player -> {
             playerGameRepository.save(PlayerGame.builder()
                     .game(game)
                     .player(player)
                     .build());
-            playerResponseList.add(mapObject(player, PlayerResponse.class));
         });
-        GameResponse gameResponse = mapObject(game, GameResponse.class);
-        gameResponse.setPlayerResponseList(playerResponseList);
-        return gameResponse;
+        game.setPlayerList(playerList);
     }
 
     public Game createGame(GameRequest gameRequest) {
         Game game = gameRepository.findByGameName(gameRequest.getGameName())
-                .orElseThrow(()-> new RuntimeException("Game not found"));
-        if(Objects.nonNull(game)){
+                .orElseThrow(() -> new RuntimeException("Game not found"));
+        if (Objects.nonNull(game)) {
             return game;
         }
         return gameRepository.save(Game.builder()
@@ -98,7 +94,7 @@ public class GameServiceImpl implements GameService {
 
     public void reset(Integer gameId) {
         Game game = gameRepository.findById(gameId)
-                .orElseThrow(()-> new RuntimeException("Game not found"));
+                .orElseThrow(() -> new RuntimeException("Game not found"));
         playerGameRepository.findByGameId(gameId).forEach(playerGameRepository::delete);
         game.setStarted(false);
         game.setFinished(false);
