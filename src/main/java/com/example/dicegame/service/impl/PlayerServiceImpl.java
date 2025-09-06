@@ -7,6 +7,7 @@ import com.example.dicegame.model.dto.response.PlayerResponse;
 import com.example.dicegame.model.dto.response.base.PaginatedResponse;
 import com.example.dicegame.model.entity.Player;
 import com.example.dicegame.model.entity.PlayerGame;
+import com.example.dicegame.repository.PlayerCustomRepository;
 import com.example.dicegame.repository.PlayerGameRepository;
 import com.example.dicegame.repository.PlayerRepository;
 import com.example.dicegame.service.PlayerService;
@@ -24,6 +25,7 @@ import static com.example.dicegame.util.ObjectUtil.mapObject;
 public class PlayerServiceImpl implements PlayerService {
     private final PlayerRepository playerRepository;
     private final PlayerGameRepository playerGameRepository;
+    private final PlayerCustomRepository playerCustomRepository;
 
     @Override
     public PlayerResponse createPlayer(PlayerRequest playerRequest) throws PlayerException {
@@ -46,6 +48,6 @@ public class PlayerServiceImpl implements PlayerService {
 
     @Override
     public PaginatedResponse<PlayerResponse> pagePlayer(PlayerSearchRequest playerSearchRequest) throws PlayerException {
-        return null;
+        return playerCustomRepository.pageData(playerSearchRequest);
     }
 }
