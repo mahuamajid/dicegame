@@ -1,6 +1,5 @@
 package com.example.dicegame.controller;
 
-import com.example.dicegame.exception.PlayerException;
 import com.example.dicegame.model.dto.request.GameRequest;
 import com.example.dicegame.model.dto.response.GameResponse;
 import com.example.dicegame.model.dto.response.StartGameResponse;
@@ -26,20 +25,11 @@ public class GameController {
     private final GameService gameService;
     private final ApiResponseFactory responseFactory;
 
-    @Operation(summary = "Create a new Game",
-            description = "Creates new Game with the provided data")
-    @PostMapping
-    public ResponseEntity<ApiResponse<GameResponse>> create(@Valid @RequestBody GameRequest gameRequest) {
-        return responseFactory.create(gameService.create(gameRequest),
-                GAME_SAVED_SUCCESS.getStatusCode(),
-                GAME_SAVED_SUCCESS.getMessage());
-    }
-
     @Operation(summary = "Start a new Game",
             description = "Starts new Game with the provided data")
-    @PutMapping("/start/target-value/{targetValue}")
-    public ResponseEntity<ApiResponse<StartGameResponse>> start(@PathVariable(value = "targetValue", required = false) String targetValue) {
-        return responseFactory.create(gameService.start(targetValue),
+    @PutMapping("/start")
+    public ResponseEntity<ApiResponse<StartGameResponse>> start(@RequestBody @Valid GameRequest gameRequest) {
+        return responseFactory.create(gameService.start(gameRequest),
                 GAME_UPDATED_SUCCESS.getStatusCode(),
                 GAME_UPDATED_SUCCESS.getMessage());
     }
@@ -48,9 +38,9 @@ public class GameController {
             summary = "Retrieve score a Game",
             description = "Retrieve scores a Game"
     )
-    @GetMapping("/score")
-    public ResponseEntity<ApiResponse<GameResponse>> score() {
-        return responseFactory.success(gameService.score(),
+    @GetMapping("/score/{gameId}")
+    public ResponseEntity<ApiResponse<GameResponse>> score(@PathVariable("gameId") Integer gameId) {
+        return responseFactory.success(gameService.score(gameId),
                 GAME_FETCH_SUCCESS.getStatusCode(),
                 GAME_FETCH_SUCCESS.getMessage());
     }
@@ -59,9 +49,9 @@ public class GameController {
             summary = "Retrieve status of a Game",
             description = "Retrieve status of a Game"
     )
-    @GetMapping("/status")
-    public ResponseEntity<ApiResponse<GameResponse>> status() {
-        return responseFactory.success(gameService.status(),
+    @GetMapping("/status/{gameId}")
+    public ResponseEntity<ApiResponse<GameResponse>> status(@PathVariable("gameId")Integer gameId) {
+        return responseFactory.success(gameService.status(gameId),
                 GAME_FETCH_SUCCESS.getStatusCode(),
                 GAME_FETCH_SUCCESS.getMessage());
     }
