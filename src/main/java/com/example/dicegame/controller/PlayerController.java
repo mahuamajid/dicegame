@@ -13,10 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -56,7 +53,7 @@ public class PlayerController {
             summary = "Retrieve Players",
             description = "Provides a list of Player with the provided data available in the system"
     )
-    @PostMapping("/get-all")
+    @GetMapping("/get-all")
     public ResponseEntity<ApiResponse<List<PlayerResponse>>> list() {
         return responseFactory.success(playerService.playerList(),
                 PLAYER_FETCH_SUCCESS.getStatusCode(),
