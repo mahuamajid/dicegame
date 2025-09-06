@@ -9,7 +9,7 @@ import com.example.dicegame.model.dto.response.base.PaginatedResponse;
 import java.util.List;
 
 public interface PlayerService {
-    PlayerResponse createPlayer(PlayerRequest playerRequest);
+    PlayerResponse createPlayer(PlayerRequest playerRequest) throws PlayerException;
     List<PlayerResponse> playerList();
     PaginatedResponse<PlayerResponse> pagePlayer(PlayerSearchRequest playerSearchRequest) throws PlayerException;
 }

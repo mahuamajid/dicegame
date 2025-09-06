@@ -17,7 +17,8 @@ public enum PlayerStatusDictionary {
 
     // Error code & messages
 
-    PLAYER_FETCH_FAILED("901-004-2001-1", "Failed to fetch player");
+    PLAYER_FETCH_FAILED("901-004-2001-1", "Failed to fetch player"),
+    PLAYER_REQUEST_NULL("901-004-2002-1", "PlayerRequest cannot be null");
 
     private final String statusCode;
     private final String message;

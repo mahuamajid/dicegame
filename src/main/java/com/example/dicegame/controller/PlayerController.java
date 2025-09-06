@@ -32,7 +32,8 @@ public class PlayerController {
     @Operation(summary = "Create a new Player",
             description = "Creates a new Player with the provided data")
     @PostMapping
-    public ResponseEntity<ApiResponse<PlayerResponse>> create(@Valid @RequestBody PlayerRequest playerRequest) {
+    public ResponseEntity<ApiResponse<PlayerResponse>> create(@Valid @RequestBody PlayerRequest playerRequest)
+            throws PlayerException {
         return responseFactory.create(playerService.createPlayer(playerRequest),
                 PLAYER_SAVED_SUCCESS.getStatusCode(),
                 PLAYER_SAVED_SUCCESS.getMessage());
