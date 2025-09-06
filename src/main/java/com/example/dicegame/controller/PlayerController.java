@@ -26,7 +26,7 @@ import static com.example.dicegame.constant.PlayerStatusDictionary.*;
 @Tag(name = "Player",
         description = "API endpoints for managing Players")
 public class PlayerController {
-    private PlayerService playerService;
+    private final PlayerService playerService;
     private final ApiResponseFactory responseFactory;
 
     @Operation(summary = "Create a new Player",

@@ -16,7 +16,7 @@ import static com.example.dicegame.constant.ErrorConstant.*;
 public class PlayerRequest {
     @NotBlank(message = PLAYER_NAME_REQUIRED)
     @Size(min = 2, max = 50, message = PLAYER_NAME_LENGTH)
-    private String name;
+    private String playerName;
 
     @NotNull(message = PLAYER_AGE_REQUIRED)
     @Min(value = 5, message = PLAYER_MIN_AGE)
