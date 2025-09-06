@@ -6,6 +6,8 @@ import com.example.dicegame.model.dto.request.PlayerSearchRequest;
 import com.example.dicegame.model.dto.response.PlayerResponse;
 import com.example.dicegame.model.dto.response.base.PaginatedResponse;
 import com.example.dicegame.model.entity.Player;
+import com.example.dicegame.model.entity.PlayerGame;
+import com.example.dicegame.repository.PlayerGameRepository;
 import com.example.dicegame.repository.PlayerRepository;
 import com.example.dicegame.service.PlayerService;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ import static com.example.dicegame.util.ObjectUtil.mapObject;
 @RequiredArgsConstructor
 public class PlayerServiceImpl implements PlayerService {
     private final PlayerRepository playerRepository;
+    private final PlayerGameRepository playerGameRepository;
 
     @Override
     public PlayerResponse createPlayer(PlayerRequest playerRequest) throws PlayerException {
@@ -34,8 +37,11 @@ public class PlayerServiceImpl implements PlayerService {
     }
 
     @Override
-    public List<PlayerResponse> playerList() {
-        return List.of();
+    public List<PlayerResponse> playerList(Integer gameId) {
+        List<PlayerGame> playerGameList = playerGameRepository.findByGameId(gameId);
+        return playerGameList.stream()
+                .map(playerGame -> mapObject(playerGame.getPlayer(), PlayerResponse.class))
+                .toList();
     }
 
     @Override

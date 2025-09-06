@@ -54,9 +54,9 @@ public class PlayerController {
             summary = "Retrieve all Players",
             description = "Provides a list of Player with the provided data available in the system"
     )
-    @GetMapping("/get-all")
-    public ResponseEntity<ApiResponse<List<PlayerResponse>>> list() {
-        return responseFactory.success(playerService.playerList(),
+    @GetMapping("/get/all/game-id/{gameId}")
+    public ResponseEntity<ApiResponse<List<PlayerResponse>>> list(@PathVariable("gameId") Integer gameId) {
+        return responseFactory.success(playerService.playerList(gameId),
                 PLAYER_FETCH_SUCCESS.getStatusCode(),
                 PLAYER_FETCH_SUCCESS.getMessage());
     }

@@ -10,6 +10,6 @@ import java.util.List;
 
 public interface PlayerService {
     PlayerResponse createPlayer(PlayerRequest playerRequest) throws PlayerException;
-    List<PlayerResponse> playerList();
+    List<PlayerResponse> playerList(Integer gameId);
     PaginatedResponse<PlayerResponse> pagePlayer(PlayerSearchRequest playerSearchRequest) throws PlayerException;
 }
