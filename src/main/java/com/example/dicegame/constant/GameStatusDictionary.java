@@ -16,6 +16,7 @@ public enum GameStatusDictionary {
     GAME_UPDATED_SUCCESS("901-002-0003-0", "Game updated successfully"),
     GAME_PAGE_FETCH_SUCCESS("901-002-0004-0", "Game fetched successfully with pagination"),
     GAME_START_SUCCESS("901-002-0005-0", "Game started successfully"),
+    GAME_NOT_START("901-002-0006-0", "Game created successfully"),
 
     // Error code & messages
 

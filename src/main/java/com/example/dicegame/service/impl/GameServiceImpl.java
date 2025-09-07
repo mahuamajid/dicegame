@@ -43,7 +43,9 @@ public class GameServiceImpl implements GameService {
         addPlayerInGame(game, gameRequest);
         Game startedGame = startGame(game);
 //        playService.play(startedGame);
-        return null;
+        return StartGameResponse.builder()
+                .started(startedGame.isStarted())
+                .build();
     }
 
     @Transactional(readOnly = true)
@@ -96,7 +98,6 @@ public class GameServiceImpl implements GameService {
                         .game(game)
                         .player(player)
                         .build())).collect(Collectors.toSet());
-        game.setPlayers(players);
     }
 
     public Game createGame(GameRequest gameRequest) {

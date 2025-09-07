@@ -31,9 +31,16 @@ public class GameController {
     @PostMapping("/start")
     public ResponseEntity<ApiResponse<StartGameResponse>> start(@RequestBody @Valid GameRequest gameRequest)
             throws GameException {
-        return responseFactory.create(gameService.start(gameRequest),
-                GAME_START_SUCCESS.getStatusCode(),
-                GAME_START_SUCCESS.getMessage());
+        StartGameResponse started = gameService.start(gameRequest);
+        if(started.isStarted()){
+            return responseFactory.create(started,
+                    GAME_START_SUCCESS.getStatusCode(),
+                    GAME_START_SUCCESS.getMessage());
+        } else {
+            return responseFactory.create(started,
+                    GAME_NOT_START.getStatusCode(),
+                    GAME_NOT_START.getMessage());
+        }
     }
 
     @Operation(
