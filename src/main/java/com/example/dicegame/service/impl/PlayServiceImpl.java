@@ -4,6 +4,7 @@ import com.example.dicegame.client.support.RollDiceSupport;
 import com.example.dicegame.constant.State;
 import com.example.dicegame.model.entity.Game;
 import com.example.dicegame.model.entity.Player;
+import com.example.dicegame.repository.GameRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -16,11 +17,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Service
 @Slf4j
 public class PlayServiceImpl implements PlayService {
+    private GameRepository gameRepository;
     private RollDiceSupport rollDiceSupport;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final AtomicBoolean engineRunning = new AtomicBoolean(false);
 
-    PlayServiceImpl(RollDiceSupport rollDiceSupport) {
+    PlayServiceImpl(GameRepository gameRepository, RollDiceSupport rollDiceSupport) {
+        this.gameRepository = gameRepository;
         this.rollDiceSupport = rollDiceSupport;
     }
 
@@ -112,6 +115,7 @@ public class PlayServiceImpl implements PlayService {
         if (player.getScore() >= game.getTargetScore()) {
             game.setFinished(true);
             game.setWinnerPlayer(player);
+            gameRepository.save(game);
         }
     }
 

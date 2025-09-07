@@ -18,9 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.example.dicegame.constant.GameStatusDictionary.*;
@@ -42,9 +40,10 @@ public class GameServiceImpl implements GameService {
         Game game = createGame(gameRequest);
         addPlayerInGame(game, gameRequest);
         Game startedGame = startGame(game);
-//        playService.play(startedGame);
+        playService.play(startedGame);
         return StartGameResponse.builder()
                 .started(startedGame.isStarted())
+                .targetScore(startedGame.getTargetScore())
                 .build();
     }
 
@@ -56,11 +55,12 @@ public class GameServiceImpl implements GameService {
             return new GameException(GAME_FETCH_FAILED.getMessage(), GAME_FETCH_FAILED.getStatusCode());
         });
         List<PlayerGame> playerGameList = playerGameRepository.findByGameId(gameId);
-        List<PlayerResponse> playerResponseList = playerGameList.stream()
+        Map<Integer,PlayerResponse> playerResponseMap = playerGameList.stream()
                 .map(playerGame -> mapObject(playerGame.getPlayer(), PlayerResponse.class))
-                .toList();
+                .collect(Collectors.toMap(PlayerResponse::getId, playerResponse -> playerResponse));
         GameResponse gameResponse = mapObject(game, GameResponse.class);
-        gameResponse.setPlayerResponseList(playerResponseList);
+        Optional.ofNullable(game.getWinnerPlayer()).ifPresent(player ->  gameResponse.setWinnerPlayer(playerResponseMap.get(player.getId())));
+        gameResponse.setPlayerResponseList(playerResponseMap.values().stream().toList());
         return gameResponse;
     }
 
