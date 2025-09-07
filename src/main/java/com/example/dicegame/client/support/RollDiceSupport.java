@@ -9,7 +9,7 @@ import java.util.Objects;
 public class RollDiceSupport {
     private RollDiceClient rollDiceClient;
 
-    public int getRoll() {
+    public int roll() {
        return Objects.requireNonNull(rollDiceClient.roll().getBody()).getValue();
     }
 }

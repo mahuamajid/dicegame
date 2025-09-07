@@ -3,8 +3,8 @@ package com.example.dicegame.model.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "game")
@@ -14,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
-@ToString(exclude = "playerList")
+@ToString(exclude = "players")
 public class Game {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,5 +39,5 @@ public class Game {
     private Player winnerPlayer; // null until finished
 
     @ManyToMany(mappedBy = "gameList")  // Bidirectional mapping
-    private List<Player> playerList = new ArrayList<>();
+    private Set<Player> players = new HashSet<>();
 }

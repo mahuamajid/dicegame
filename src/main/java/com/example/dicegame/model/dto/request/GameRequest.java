@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
-import java.util.List;
+import java.util.Set;
 
 import static com.example.dicegame.constant.ErrorConstant.*;
 
@@ -20,6 +20,6 @@ public class GameRequest {
     private String gameName;
 
     @NotEmpty(message = PLAYER_ID_LIST_REQUIRED)
-    @Size(min=2, max = 4, message = PLAYER_ID_LIST_SIZE)
-    private List<Integer> playerIdList;
+    @Size(max = 4, message = PLAYER_ID_LIST_SIZE)
+    private Set<Integer> playerIds;
 }

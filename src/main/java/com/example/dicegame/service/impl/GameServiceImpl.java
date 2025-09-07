@@ -18,9 +18,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.example.dicegame.constant.GameStatusDictionary.*;
 import static com.example.dicegame.util.ObjectUtil.mapObject;
@@ -33,6 +34,7 @@ public class GameServiceImpl implements GameService {
     private final PlayerRepository playerRepository;
     private final PlayerGameRepository playerGameRepository;
     private final AppProperties appProperties;
+    private final PlayService playService;
 
     @Transactional
     @Override
@@ -40,6 +42,7 @@ public class GameServiceImpl implements GameService {
         Game game = createGame(gameRequest);
         addPlayerInGame(game, gameRequest);
         Game startedGame = startGame(game);
+//        playService.play(startedGame);
         return null;
     }
 
@@ -65,28 +68,35 @@ public class GameServiceImpl implements GameService {
         return score(gameId);
     }
 
-    private Game startGame(Game game) throws GameException {
+    public Game startGame(Game game) throws GameException {
         if (game.isStarted()) {
             log.error("Game already started");
             throw new GameException(GAME_ALREADY_STARTED.getMessage(), GAME_ALREADY_STARTED.getStatusCode());
         }
-        game.setStarted(Boolean.TRUE);
-        return gameRepository.save(game);
+        if (game.getPlayers().size() >= 2 && game.getPlayers().size() <= 4) {
+            game.setStarted(Boolean.TRUE);
+            return gameRepository.save(game);
+        }
+        return game;
     }
 
     public void addPlayerInGame(Game game, GameRequest gameRequest) throws GameException {
-        if (gameRequest.getPlayerIdList().size() < 2 || gameRequest.getPlayerIdList().size() > 4) {
-            log.error("Game request parameters error. Need 2 to 4 players to play");
-            throw new GameException(GAME_INVALID_PLAYER_NUMBER.getMessage(), GAME_INVALID_PLAYER_NUMBER.getStatusCode());
+        if (game.isStarted()) {
+            log.info("Game already started");
+            return;
         }
-        List<Player> playerList = playerRepository.findByIdIn(gameRequest.getPlayerIdList());
-        playerList.forEach(player -> {
-            playerGameRepository.save(PlayerGame.builder()
-                    .game(game)
-                    .player(player)
-                    .build());
-        });
-        game.setPlayerList(playerList);
+        if (game.getPlayers().size() >= 4) {
+            log.info("There are already 4 players ready to play.");
+            return;
+        }
+        List<Integer> newPlayerIdList = validatePlayerListForGame(game, gameRequest.getPlayerIds());
+        List<Player> playerList = playerRepository.findByIdIn(newPlayerIdList);
+        Set<Player> players = playerList.stream().peek(player ->
+                playerGameRepository.save(PlayerGame.builder()
+                        .game(game)
+                        .player(player)
+                        .build())).collect(Collectors.toSet());
+        game.setPlayers(players);
     }
 
     public Game createGame(GameRequest gameRequest) {
@@ -111,5 +121,19 @@ public class GameServiceImpl implements GameService {
         game.setTargetScore(appProperties.getTargetScore());
         game.setWinnerPlayer(null);
         gameRepository.save(game);
+    }
+
+    private List<Integer> validatePlayerListForGame(Game game, Set<Integer> newPlayerIds) throws GameException {
+        Set<Integer> existingPlayerIds = game.getPlayers().stream().map(Player::getId).collect(Collectors.toSet());
+        newPlayerIds.addAll(existingPlayerIds);
+        if (newPlayerIds.size() > 4) {
+            log.error("Invalid player number");
+            throw new GameException(GAME_INVALID_PLAYER_NUMBER.getMessage(), GAME_INVALID_PLAYER_NUMBER.getStatusCode());
+        }
+        newPlayerIds.removeAll(existingPlayerIds);
+        if (newPlayerIds.isEmpty()) {
+            log.info("No player to add");
+        }
+        return newPlayerIds.stream().toList();
     }
 }
