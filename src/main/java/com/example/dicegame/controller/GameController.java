@@ -27,11 +27,11 @@ public class GameController {
 
     @Operation(summary = "Start a new Game",
             description = "Starts new Game with the provided data")
-    @PutMapping("/start")
+    @PostMapping("/start")
     public ResponseEntity<ApiResponse<StartGameResponse>> start(@RequestBody @Valid GameRequest gameRequest) {
         return responseFactory.create(gameService.start(gameRequest),
-                GAME_UPDATED_SUCCESS.getStatusCode(),
-                GAME_UPDATED_SUCCESS.getMessage());
+                GAME_START_SUCCESS.getStatusCode(),
+                GAME_START_SUCCESS.getMessage());
     }
 
     @Operation(

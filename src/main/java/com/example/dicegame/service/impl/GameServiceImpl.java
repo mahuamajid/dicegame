@@ -82,7 +82,7 @@ public class GameServiceImpl implements GameService {
 
     public Game createGame(GameRequest gameRequest) {
         Game game = gameRepository.findByGameName(gameRequest.getGameName())
-                .orElseThrow(() -> new RuntimeException("Game not found"));
+                .orElse(null);
         if (Objects.nonNull(game)) {
             return game;
         }
