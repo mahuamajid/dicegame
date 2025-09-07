@@ -59,13 +59,14 @@ public class PlayServiceImpl implements PlayService {
 
         int roll = rollDiceSupport.roll();
 
+        //TODO implement strategy pattern on state
         switch (player.getState()) {
             case BEFORE_START -> {
                 if (roll == 6) {
-                    logRoll(player, roll);
+                    logPlayersRollValue(player, roll);
                     player.setState(State.START_ROLL);
                     int startRoll = rollDiceSupport.roll();
-                    logRoll(player, startRoll);
+                    logPlayersRollValue(player, startRoll);
                     if (startRoll == 6) {
                         // starting point 0
                     } else if (startRoll == 4) {
@@ -77,20 +78,20 @@ public class PlayServiceImpl implements PlayService {
                         checkWin(game, player);
                     }
                 } else {
-                    logRoll(player, roll);
+                    logPlayersRollValue(player, roll);
                 }
             }
             case START_ROLL -> {
             // should not happen; handled immediately above
             }
             case ACTIVE -> {
-                logRoll(player, roll);
+                logPlayersRollValue(player, roll);
                 if (roll == 6) {
                     player.setScore(player.getScore() + 6);
                     checkWin(game, player);
                     if (!game.isFinished()) {
                         int extra = rollDiceSupport.roll();
-                        logRoll(player, extra);
+                        logPlayersRollValue(player, extra);
                         // extra roll is a normal roll
                         applyActiveRoll(game, player, extra);
                     }
@@ -119,7 +120,7 @@ public class PlayServiceImpl implements PlayService {
         }
     }
 
-    private void logRoll(Player player, int value) {
+    private void logPlayersRollValue(Player player, int value) {
         log.info("Player name:{}, Total Score:{}, Current Value of Dice:{}", player.getPlayerName(), player.getScore(), value);
     }
 }

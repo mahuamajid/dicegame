@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -75,7 +76,8 @@ public class GameServiceImpl implements GameService {
             log.error("Game already started");
             throw new GameException(GAME_ALREADY_STARTED.getMessage(), GAME_ALREADY_STARTED.getStatusCode());
         }
-        if (game.getPlayers().size() >= 2 && game.getPlayers().size() <= 4) {
+        List<PlayerGame> playerGameList = playerGameRepository.findByGameId(game.getId());
+        if (playerGameList.size() >= 2 && playerGameList.size() <= 4) {
             game.setStarted(Boolean.TRUE);
             return gameRepository.save(game);
         }
@@ -87,17 +89,16 @@ public class GameServiceImpl implements GameService {
             log.info("Game already started");
             return;
         }
+        if(CollectionUtils.isEmpty(game.getPlayers())){
+            saveDataInPlayerGame(game, gameRequest.getPlayerIds());
+            return;
+        }
         if (game.getPlayers().size() >= 4) {
             log.info("There are already 4 players ready to play.");
             return;
         }
-        List<Integer> newPlayerIdList = validatePlayerListForGame(game, gameRequest.getPlayerIds());
-        List<Player> playerList = playerRepository.findByIdIn(newPlayerIdList);
-        Set<Player> players = playerList.stream().peek(player ->
-                playerGameRepository.save(PlayerGame.builder()
-                        .game(game)
-                        .player(player)
-                        .build())).collect(Collectors.toSet());
+        Set<Integer> newPlayerIds = validatePlayerListForGame(game, gameRequest.getPlayerIds());
+        saveDataInPlayerGame(game, newPlayerIds);
     }
 
     public Game createGame(GameRequest gameRequest) {
@@ -124,7 +125,16 @@ public class GameServiceImpl implements GameService {
         gameRepository.save(game);
     }
 
-    private List<Integer> validatePlayerListForGame(Game game, Set<Integer> newPlayerIds) throws GameException {
+    public void saveDataInPlayerGame(Game game, Set<Integer> playerIds) {
+        List<Player> playerList = playerRepository.findByIdIn(playerIds.stream().toList());
+        playerList.stream().peek(player ->
+                playerGameRepository.save(PlayerGame.builder()
+                        .game(game)
+                        .player(player)
+                        .build())).collect(Collectors.toSet());
+    }
+
+    private Set<Integer> validatePlayerListForGame(Game game, Set<Integer> newPlayerIds) throws GameException {
         Set<Integer> existingPlayerIds = game.getPlayers().stream().map(Player::getId).collect(Collectors.toSet());
         newPlayerIds.addAll(existingPlayerIds);
         if (newPlayerIds.size() > 4) {
@@ -135,6 +145,6 @@ public class GameServiceImpl implements GameService {
         if (newPlayerIds.isEmpty()) {
             log.info("No player to add");
         }
-        return newPlayerIds.stream().toList();
+        return newPlayerIds;
     }
 }
