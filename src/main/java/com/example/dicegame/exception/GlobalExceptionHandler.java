@@ -1,5 +1,6 @@
 package com.example.dicegame.exception;
 
+import com.example.dicegame.constant.GlobalErrorStatusDictionary;
 import com.example.dicegame.model.dto.response.base.ErrorResponse;
 import com.example.dicegame.model.dto.response.base.MetaData;
 import com.example.dicegame.util.DateTimeUtils;
@@ -18,7 +19,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.example.dicegame.exception.GlobalErrorStatusDictionary.*;
+import static com.example.dicegame.constant.GlobalErrorStatusDictionary.*;
 
 @RestControllerAdvice
 @Slf4j
@@ -80,6 +81,18 @@ public class GlobalExceptionHandler {
     // Handles PlayerException
     @ExceptionHandler(PlayerException.class)
     public ResponseEntity<ErrorResponse> handlePlayerException(PlayerException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                ex.getMessage(),
+                ex.getStatusCode(),
+                request.getRequestURI(),
+                null
+        );
+    }
+
+    // Handles GameException
+    @ExceptionHandler(GameException.class)
+    public ResponseEntity<ErrorResponse> handleGameException(GameException ex, HttpServletRequest request) {
         return buildErrorResponse(
                 HttpStatus.BAD_REQUEST,
                 ex.getMessage(),

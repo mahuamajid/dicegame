@@ -1,4 +1,4 @@
-package com.example.dicegame.exception;
+package com.example.dicegame.constant;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

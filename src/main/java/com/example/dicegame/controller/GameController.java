@@ -1,5 +1,6 @@
 package com.example.dicegame.controller;
 
+import com.example.dicegame.exception.GameException;
 import com.example.dicegame.model.dto.request.GameRequest;
 import com.example.dicegame.model.dto.response.GameResponse;
 import com.example.dicegame.model.dto.response.StartGameResponse;
@@ -28,7 +29,8 @@ public class GameController {
     @Operation(summary = "Start a new Game",
             description = "Starts new Game with the provided data")
     @PostMapping("/start")
-    public ResponseEntity<ApiResponse<StartGameResponse>> start(@RequestBody @Valid GameRequest gameRequest) {
+    public ResponseEntity<ApiResponse<StartGameResponse>> start(@RequestBody @Valid GameRequest gameRequest)
+            throws GameException {
         return responseFactory.create(gameService.start(gameRequest),
                 GAME_START_SUCCESS.getStatusCode(),
                 GAME_START_SUCCESS.getMessage());
@@ -39,7 +41,8 @@ public class GameController {
             description = "Retrieve scores a Game"
     )
     @GetMapping("/score/{gameId}")
-    public ResponseEntity<ApiResponse<GameResponse>> score(@PathVariable("gameId") Integer gameId) {
+    public ResponseEntity<ApiResponse<GameResponse>> score(@PathVariable("gameId") Integer gameId)
+            throws GameException {
         return responseFactory.success(gameService.score(gameId),
                 GAME_FETCH_SUCCESS.getStatusCode(),
                 GAME_FETCH_SUCCESS.getMessage());
@@ -50,7 +53,8 @@ public class GameController {
             description = "Retrieve status of a Game"
     )
     @GetMapping("/status/{gameId}")
-    public ResponseEntity<ApiResponse<GameResponse>> status(@PathVariable("gameId")Integer gameId) {
+    public ResponseEntity<ApiResponse<GameResponse>> status(@PathVariable("gameId")Integer gameId)
+            throws GameException {
         return responseFactory.success(gameService.status(gameId),
                 GAME_FETCH_SUCCESS.getStatusCode(),
                 GAME_FETCH_SUCCESS.getMessage());
