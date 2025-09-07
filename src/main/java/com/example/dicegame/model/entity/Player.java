@@ -38,7 +38,7 @@ public class Player {
 
     @ManyToMany
     @JoinTable(
-            name = "player_game", // join table name
+            name = "game_player", // join table name
             joinColumns = @JoinColumn(name = "player_id"), // foreign key in join table for Player
             inverseJoinColumns = @JoinColumn(name = "game_id") // foreign key for Game
     )

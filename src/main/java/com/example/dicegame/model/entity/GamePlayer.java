@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "player_game")
+@Table(name = "game_player")
 @Builder
 @Getter
 @Setter
@@ -12,7 +12,7 @@ import lombok.*;
 @AllArgsConstructor
 @EqualsAndHashCode
 @ToString
-public class PlayerGame {
+public class GamePlayer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;

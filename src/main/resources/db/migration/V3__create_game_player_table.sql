@@ -1,9 +1,9 @@
 
 -- ===========================================
--- Table: player_game
+-- Table: game_player
 -- ===========================================
 
-CREATE TABLE player_game (
+CREATE TABLE game_player (
     id                                      SERIAL PRIMARY KEY,
     player_id                               INT NOT NULL,
     game_id                                 INT NOT NULL,

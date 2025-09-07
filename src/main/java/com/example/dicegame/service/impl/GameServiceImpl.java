@@ -7,10 +7,10 @@ import com.example.dicegame.model.dto.response.GameResponse;
 import com.example.dicegame.model.dto.response.PlayerResponse;
 import com.example.dicegame.model.dto.response.StartGameResponse;
 import com.example.dicegame.model.entity.Game;
+import com.example.dicegame.model.entity.GamePlayer;
 import com.example.dicegame.model.entity.Player;
-import com.example.dicegame.model.entity.PlayerGame;
 import com.example.dicegame.repository.GameRepository;
-import com.example.dicegame.repository.PlayerGameRepository;
+import com.example.dicegame.repository.GamePlayerRepository;
 import com.example.dicegame.repository.PlayerRepository;
 import com.example.dicegame.service.GameService;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +31,7 @@ import static com.example.dicegame.util.ObjectUtil.mapObject;
 public class GameServiceImpl implements GameService {
     private final GameRepository gameRepository;
     private final PlayerRepository playerRepository;
-    private final PlayerGameRepository playerGameRepository;
+    private final GamePlayerRepository gamePlayerRepository;
     private final AppProperties appProperties;
     private final PlayService playService;
 
@@ -55,9 +55,9 @@ public class GameServiceImpl implements GameService {
             log.error("Game not found by id {}", gameId);
             return new GameException(GAME_FETCH_FAILED.getMessage(), GAME_FETCH_FAILED.getStatusCode());
         });
-        List<PlayerGame> playerGameList = playerGameRepository.findByGameId(gameId);
-        Map<Integer,PlayerResponse> playerResponseMap = playerGameList.stream()
-                .map(playerGame -> mapObject(playerGame.getPlayer(), PlayerResponse.class))
+        List<GamePlayer> gamePlayerList = gamePlayerRepository.findByGameId(gameId);
+        Map<Integer,PlayerResponse> playerResponseMap = gamePlayerList.stream()
+                .map(gamePlayer -> mapObject(gamePlayer.getPlayer(), PlayerResponse.class))
                 .collect(Collectors.toMap(PlayerResponse::getId, playerResponse -> playerResponse));
         GameResponse gameResponse = mapObject(game, GameResponse.class);
         Optional.ofNullable(game.getWinnerPlayer()).ifPresent(player ->  gameResponse.setWinnerPlayer(playerResponseMap.get(player.getId())));
@@ -76,8 +76,8 @@ public class GameServiceImpl implements GameService {
             log.error("Game already started");
             throw new GameException(GAME_ALREADY_STARTED.getMessage(), GAME_ALREADY_STARTED.getStatusCode());
         }
-        List<PlayerGame> playerGameList = playerGameRepository.findByGameId(game.getId());
-        if (playerGameList.size() >= 2 && playerGameList.size() <= 4) {
+        List<GamePlayer> gamePlayerList = gamePlayerRepository.findByGameId(game.getId());
+        if (gamePlayerList.size() >= 2 && gamePlayerList.size() <= 4) {
             game.setStarted(Boolean.TRUE);
             return gameRepository.save(game);
         }
@@ -90,7 +90,7 @@ public class GameServiceImpl implements GameService {
             return;
         }
         if(CollectionUtils.isEmpty(game.getPlayers())){
-            saveDataInPlayerGame(game, gameRequest.getPlayerIds());
+            saveDataInGamePlayer(game, gameRequest.getPlayerIds());
             return;
         }
         if (game.getPlayers().size() >= 4) {
@@ -98,7 +98,7 @@ public class GameServiceImpl implements GameService {
             return;
         }
         Set<Integer> newPlayerIds = validatePlayerListForGame(game, gameRequest.getPlayerIds());
-        saveDataInPlayerGame(game, newPlayerIds);
+        saveDataInGamePlayer(game, newPlayerIds);
     }
 
     public Game createGame(GameRequest gameRequest) {
@@ -117,7 +117,7 @@ public class GameServiceImpl implements GameService {
         //TODO parameter could be game here
         Game game = gameRepository.findById(gameId)
                 .orElseThrow(() -> new RuntimeException("Game not found"));
-        playerGameRepository.findByGameId(gameId).forEach(playerGameRepository::delete);
+        gamePlayerRepository.findByGameId(gameId).forEach(gamePlayerRepository::delete);
         game.setStarted(false);
         game.setFinished(false);
         game.setTargetScore(appProperties.getTargetScore());
@@ -125,10 +125,10 @@ public class GameServiceImpl implements GameService {
         gameRepository.save(game);
     }
 
-    public void saveDataInPlayerGame(Game game, Set<Integer> playerIds) {
+    public void saveDataInGamePlayer(Game game, Set<Integer> playerIds) {
         List<Player> playerList = playerRepository.findByIdIn(playerIds.stream().toList());
         playerList.stream().peek(player ->
-                playerGameRepository.save(PlayerGame.builder()
+                gamePlayerRepository.save(GamePlayer.builder()
                         .game(game)
                         .player(player)
                         .build())).collect(Collectors.toSet());
