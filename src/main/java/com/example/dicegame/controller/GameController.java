@@ -48,9 +48,9 @@ public class GameController {
     }
 
     @Operation(
-            summary = "Retrieve all Players",
-            description = "Provides a list of Player with the provided data available in the system")
-    @GetMapping("/players/game-id/{gameId}")
+            summary = "Retrieve all Players of a Game",
+            description = "Provides a list of Player of a Game with the provided data available in the system")
+    @GetMapping("/players/{gameId}")
     public ResponseEntity<ApiResponse<List<PlayerResponse>>> list(@PathVariable("gameId") Integer gameId) {
         return responseFactory.success(gameService.playerList(gameId),
                 PLAYER_FETCH_SUCCESS.getStatusCode(),
@@ -58,8 +58,8 @@ public class GameController {
     }
 
     @Operation(
-            summary = "Retrieve score a Game",
-            description = "Retrieve scores a Game"
+            summary = "Retrieve score of a Game",
+            description = "Retrieve scores of a Game with the provided data available in the system"
     )
     @GetMapping("/score/{gameId}")
     public ResponseEntity<ApiResponse<GameResponse>> score(@PathVariable("gameId") Integer gameId)
@@ -71,7 +71,7 @@ public class GameController {
 
     @Operation(
             summary = "Retrieve winner of a Game",
-            description = "Retrieve winner of a Game"
+            description = "Retrieve winner of a Game with the provided data available in the system"
     )
     @GetMapping("/winner/{gameId}")
     public ResponseEntity<ApiResponse<PlayerResponse>> winner(@PathVariable("gameId")Integer gameId)
