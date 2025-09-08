@@ -9,6 +9,10 @@ import java.util.Optional;
 public class PlayerPredicate {
     private static final QPlayer qPlayer = QPlayer.player;
 
+    private PlayerPredicate() {
+
+    }
+
     public static BooleanBuilder build(PlayerSearchRequest searchRequest) {
         BooleanBuilder predicate = new BooleanBuilder();
 
