@@ -48,6 +48,16 @@ public class GameController {
     }
 
     @Operation(
+            summary = "Retrieve all Players",
+            description = "Provides a list of Player with the provided data available in the system")
+    @GetMapping("/players/game-id/{gameId}")
+    public ResponseEntity<ApiResponse<List<PlayerResponse>>> list(@PathVariable("gameId") Integer gameId) {
+        return responseFactory.success(gameService.playerList(gameId),
+                PLAYER_FETCH_SUCCESS.getStatusCode(),
+                PLAYER_FETCH_SUCCESS.getMessage());
+    }
+
+    @Operation(
             summary = "Retrieve score a Game",
             description = "Retrieve scores a Game"
     )
@@ -69,16 +79,5 @@ public class GameController {
         return responseFactory.success(gameService.winner(gameId),
                 GAME_FETCH_SUCCESS.getStatusCode(),
                 GAME_FETCH_SUCCESS.getMessage());
-    }
-
-    @Operation(
-            summary = "Retrieve all Players",
-            description = "Provides a list of Player with the provided data available in the system"
-    )
-    @GetMapping("/players/game-id/{gameId}")
-    public ResponseEntity<ApiResponse<List<PlayerResponse>>> list(@PathVariable("gameId") Integer gameId) {
-        return responseFactory.success(gameService.playerList(gameId),
-                PLAYER_FETCH_SUCCESS.getStatusCode(),
-                PLAYER_FETCH_SUCCESS.getMessage());
     }
 }
