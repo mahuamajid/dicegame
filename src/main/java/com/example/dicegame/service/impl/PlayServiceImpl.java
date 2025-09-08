@@ -41,6 +41,9 @@ public class PlayServiceImpl implements PlayService {
 
     @Override
     public void play(Game game) {
+        if(!game.isStarted()) {
+            return;
+        }
         List<GamePlayer> gamePlayerList = gamePlayerRepository.findByGameId(game.getId());
         runEngineAsync(game, gamePlayerList);
     }
