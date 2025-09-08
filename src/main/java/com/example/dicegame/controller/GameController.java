@@ -19,7 +19,6 @@ import java.util.List;
 
 import static com.example.dicegame.constant.ApiRoutes.GAME;
 import static com.example.dicegame.constant.GameStatusDictionary.*;
-import static com.example.dicegame.constant.PlayerStatusDictionary.PLAYER_FETCH_SUCCESS;
 
 @RestController
 @RequiredArgsConstructor
@@ -51,10 +50,10 @@ public class GameController {
             summary = "Retrieve all Players of a Game",
             description = "Provides a list of Player of a Game with the provided data available in the system")
     @GetMapping("/players/{gameId}")
-    public ResponseEntity<ApiResponse<List<PlayerResponse>>> list(@PathVariable("gameId") Integer gameId) {
+    public ResponseEntity<ApiResponse<List<PlayerResponse>>> playerList(@PathVariable("gameId") Integer gameId) {
         return responseFactory.success(gameService.playerList(gameId),
-                PLAYER_FETCH_SUCCESS.getStatusCode(),
-                PLAYER_FETCH_SUCCESS.getMessage());
+                GAME_PLAYER_FETCH_SUCCESS.getStatusCode(),
+                GAME_PLAYER_FETCH_SUCCESS.getMessage());
     }
 
     @Operation(
@@ -65,8 +64,8 @@ public class GameController {
     public ResponseEntity<ApiResponse<GameResponse>> score(@PathVariable("gameId") Integer gameId)
             throws GameException {
         return responseFactory.success(gameService.score(gameId),
-                GAME_FETCH_SUCCESS.getStatusCode(),
-                GAME_FETCH_SUCCESS.getMessage());
+                GAME_SCORE_FETCH_SUCCESS.getStatusCode(),
+                GAME_SCORE_FETCH_SUCCESS.getMessage());
     }
 
     @Operation(
@@ -77,7 +76,7 @@ public class GameController {
     public ResponseEntity<ApiResponse<PlayerResponse>> winner(@PathVariable("gameId")Integer gameId)
             throws GameException {
         return responseFactory.success(gameService.winner(gameId),
-                GAME_FETCH_SUCCESS.getStatusCode(),
-                GAME_FETCH_SUCCESS.getMessage());
+                GAME_WINNER_FETCH_SUCCESS.getStatusCode(),
+                GAME_WINNER_FETCH_SUCCESS.getMessage());
     }
 }

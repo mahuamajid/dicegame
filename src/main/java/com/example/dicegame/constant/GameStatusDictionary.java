@@ -11,12 +11,11 @@ import lombok.RequiredArgsConstructor;
 public enum GameStatusDictionary {
 
     //Success code & messages
-    GAME_FETCH_SUCCESS("901-002-0001-0", "Game fetched successfully"),
-    GAME_SAVED_SUCCESS("901-002-0002-0", "Game saved successfully"),
-    GAME_UPDATED_SUCCESS("901-002-0003-0", "Game updated successfully"),
-    GAME_PAGE_FETCH_SUCCESS("901-002-0004-0", "Game fetched successfully with pagination"),
-    GAME_START_SUCCESS("901-002-0005-0", "Game started successfully"),
-    GAME_NOT_START("901-002-0006-0", "Game created successfully"),
+    GAME_SCORE_FETCH_SUCCESS("901-002-0001-0", "Game score fetched successfully"),
+    GAME_WINNER_FETCH_SUCCESS("901-002-0002-0", "Game winner fetched successfully"),
+    GAME_PLAYER_FETCH_SUCCESS("901-002-0003-0", "Game player fetched successfully"),
+    GAME_START_SUCCESS("901-002-0004-0", "Game started successfully"),
+    GAME_NOT_START("901-002-0005-0", "Game created successfully"),
 
     // Error code & messages
 
