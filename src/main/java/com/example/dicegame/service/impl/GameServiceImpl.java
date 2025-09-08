@@ -5,6 +5,7 @@ import com.example.dicegame.exception.GameException;
 import com.example.dicegame.model.dto.request.GameRequest;
 import com.example.dicegame.model.dto.response.GameResponse;
 import com.example.dicegame.model.dto.response.PlayerResponse;
+import com.example.dicegame.model.dto.response.ScoreResponse;
 import com.example.dicegame.model.dto.response.StartGameResponse;
 import com.example.dicegame.model.entity.Game;
 import com.example.dicegame.model.entity.GamePlayer;
@@ -41,18 +42,18 @@ public class GameServiceImpl implements GameService {
     public StartGameResponse start(GameRequest gameRequest) throws GameException {
         Game game = createGame(gameRequest);
         addPlayerInGame(game, gameRequest);
-        Game startedGame = startGame(game);
-        playService.play(startedGame);
+        startGame(game);
+        playService.play(game);
         return StartGameResponse.builder()
-                .started(startedGame.isStarted())
-                .targetScore(startedGame.getTargetScore())
+                .started(game.isStarted())
+                .targetScore(game.getTargetScore())
                 .build();
     }
 
     @Transactional(readOnly = true)
     @Override
     public List<PlayerResponse> playerList(Integer gameId) {
-        List<GamePlayer> gamePlayerList = gamePlayerRepository.findByGameId(gameId);
+        List<GamePlayer> gamePlayerList = getGamePlayer(gameId);
         return gamePlayerList.stream()
                 .map(gamePlayer -> mapObject(gamePlayer.getPlayer(), PlayerResponse.class))
                 .toList();
@@ -62,13 +63,19 @@ public class GameServiceImpl implements GameService {
     @Override
     public GameResponse score(Integer gameId) throws GameException {
         Game game = getById(gameId);
-        List<GamePlayer> gamePlayerList = gamePlayerRepository.findByGameId(gameId);
-        Map<Integer, PlayerResponse> playerResponseMap = gamePlayerList.stream()
-                .map(gamePlayer -> mapObject(gamePlayer.getPlayer(), PlayerResponse.class))
-                .collect(Collectors.toMap(PlayerResponse::getId, playerResponse -> playerResponse));
+        List<GamePlayer> gamePlayerList = getGamePlayer(gameId);
+        Map<Integer, ScoreResponse> scoreResponseMap = gamePlayerList.stream()
+                .map(gamePlayer -> {
+                    return ScoreResponse.builder()
+                            .playerResponse(mapObject(gamePlayer.getPlayer(), PlayerResponse.class))
+                            .score(gamePlayer.getScore())
+                            .build();
+                }).collect(Collectors.toMap(scoreResponse -> scoreResponse.getPlayerResponse().getId(),
+                        scoreResponse -> scoreResponse));
         GameResponse gameResponse = mapObject(game, GameResponse.class);
-        Optional.ofNullable(game.getWinnerPlayer()).ifPresent(player -> gameResponse.setWinnerPlayer(playerResponseMap.get(player.getId())));
-        gameResponse.setPlayerResponseList(playerResponseMap.values().stream().toList());
+        Optional.ofNullable(game.getWinnerPlayer())
+                .ifPresent(player -> gameResponse.setWinnerPlayer(scoreResponseMap.get(player.getId()).getPlayerResponse()));
+        gameResponse.setScoreResponseList(scoreResponseMap.values().stream().toList());
         return gameResponse;
     }
 
@@ -82,17 +89,20 @@ public class GameServiceImpl implements GameService {
         throw new GameException(GAME_NOT_FINISHED.getMessage(), GAME_NOT_FINISHED.getStatusCode());
     }
 
-    public Game startGame(Game game) throws GameException {
+    public void startGame(Game game) throws GameException {
         if (game.isStarted()) {
             log.error("Game already started");
             throw new GameException(GAME_ALREADY_STARTED.getMessage(), GAME_ALREADY_STARTED.getStatusCode());
         }
-        List<GamePlayer> gamePlayerList = gamePlayerRepository.findByGameId(game.getId());
+        List<GamePlayer> gamePlayerList = getGamePlayer(game.getId());
         if (gamePlayerList.size() >= 2 && gamePlayerList.size() <= 4) {
             game.setStarted(Boolean.TRUE);
-            return gameRepository.save(game);
+            gameRepository.save(game);
         }
-        return game;
+    }
+
+    public List<GamePlayer> getGamePlayer(Integer gameId) {
+       return gamePlayerRepository.findByGameId(gameId);
     }
 
     public void addPlayerInGame(Game game, GameRequest gameRequest) throws GameException {

@@ -7,10 +7,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class PlayerResponse {
-    private Integer id;
-
-    private String playerName;
-
-    private int age;
+public class ScoreResponse {
+    private PlayerResponse playerResponse;
+    private Integer score;
 }

@@ -15,5 +15,5 @@ public class GameResponse {
     private boolean finished;
     private int targetScore;
     private PlayerResponse winnerPlayer;
-    private List<PlayerResponse> playerResponseList;
+    private List<ScoreResponse> scoreResponseList;
 }
