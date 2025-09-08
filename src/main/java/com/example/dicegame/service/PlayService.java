@@ -1,4 +1,4 @@
-package com.example.dicegame.service.impl;
+package com.example.dicegame.service;
 
 import com.example.dicegame.model.entity.Game;
 

@@ -15,8 +15,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 import static com.example.dicegame.constant.ApiRoutes.PLAYER;
 import static com.example.dicegame.constant.PlayerStatusDictionary.*;
 
@@ -48,16 +46,5 @@ public class PlayerController {
         return responseFactory.success(playerService.pagePlayer(playerSearchRequest),
                 PLAYER_PAGE_FETCH_SUCCESS.getStatusCode(),
                 PLAYER_PAGE_FETCH_SUCCESS.getMessage());
-    }
-
-    @Operation(
-            summary = "Retrieve all Players",
-            description = "Provides a list of Player with the provided data available in the system"
-    )
-    @GetMapping("/get/all/game-id/{gameId}")
-    public ResponseEntity<ApiResponse<List<PlayerResponse>>> list(@PathVariable("gameId") Integer gameId) {
-        return responseFactory.success(playerService.playerList(gameId),
-                PLAYER_FETCH_SUCCESS.getStatusCode(),
-                PLAYER_FETCH_SUCCESS.getMessage());
     }
 }

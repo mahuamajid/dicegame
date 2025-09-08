@@ -6,10 +6,7 @@ import com.example.dicegame.model.dto.request.PlayerSearchRequest;
 import com.example.dicegame.model.dto.response.PlayerResponse;
 import com.example.dicegame.model.dto.response.base.PaginatedResponse;
 
-import java.util.List;
-
 public interface PlayerService {
     PlayerResponse createPlayer(PlayerRequest playerRequest) throws PlayerException;
-    List<PlayerResponse> playerList(Integer gameId);
     PaginatedResponse<PlayerResponse> pagePlayer(PlayerSearchRequest playerSearchRequest) throws PlayerException;
 }

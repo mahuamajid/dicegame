@@ -3,6 +3,7 @@ package com.example.dicegame.controller;
 import com.example.dicegame.exception.GameException;
 import com.example.dicegame.model.dto.request.GameRequest;
 import com.example.dicegame.model.dto.response.GameResponse;
+import com.example.dicegame.model.dto.response.PlayerResponse;
 import com.example.dicegame.model.dto.response.StartGameResponse;
 import com.example.dicegame.model.dto.response.base.ApiResponse;
 import com.example.dicegame.model.dto.response.base.ApiResponseFactory;
@@ -14,8 +15,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 import static com.example.dicegame.constant.ApiRoutes.GAME;
 import static com.example.dicegame.constant.GameStatusDictionary.*;
+import static com.example.dicegame.constant.PlayerStatusDictionary.PLAYER_FETCH_SUCCESS;
 
 @RestController
 @RequiredArgsConstructor
@@ -56,14 +60,25 @@ public class GameController {
     }
 
     @Operation(
-            summary = "Retrieve status of a Game",
-            description = "Retrieve status of a Game"
+            summary = "Retrieve winner of a Game",
+            description = "Retrieve winner of a Game"
     )
-    @GetMapping("/status/{gameId}")
-    public ResponseEntity<ApiResponse<GameResponse>> status(@PathVariable("gameId")Integer gameId)
+    @GetMapping("/winner/{gameId}")
+    public ResponseEntity<ApiResponse<PlayerResponse>> winner(@PathVariable("gameId")Integer gameId)
             throws GameException {
-        return responseFactory.success(gameService.status(gameId),
+        return responseFactory.success(gameService.winner(gameId),
                 GAME_FETCH_SUCCESS.getStatusCode(),
                 GAME_FETCH_SUCCESS.getMessage());
+    }
+
+    @Operation(
+            summary = "Retrieve all Players",
+            description = "Provides a list of Player with the provided data available in the system"
+    )
+    @GetMapping("/players/game-id/{gameId}")
+    public ResponseEntity<ApiResponse<List<PlayerResponse>>> list(@PathVariable("gameId") Integer gameId) {
+        return responseFactory.success(gameService.playerList(gameId),
+                PLAYER_FETCH_SUCCESS.getStatusCode(),
+                PLAYER_FETCH_SUCCESS.getMessage());
     }
 }

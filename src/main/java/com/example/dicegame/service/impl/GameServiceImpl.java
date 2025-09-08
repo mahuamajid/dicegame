@@ -13,6 +13,7 @@ import com.example.dicegame.repository.GameRepository;
 import com.example.dicegame.repository.GamePlayerRepository;
 import com.example.dicegame.repository.PlayerRepository;
 import com.example.dicegame.service.GameService;
+import com.example.dicegame.service.PlayService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -50,6 +51,15 @@ public class GameServiceImpl implements GameService {
 
     @Transactional(readOnly = true)
     @Override
+    public List<PlayerResponse> playerList(Integer gameId) {
+        List<GamePlayer> gamePlayerList = gamePlayerRepository.findByGameId(gameId);
+        return gamePlayerList.stream()
+                .map(gamePlayer -> mapObject(gamePlayer.getPlayer(), PlayerResponse.class))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    @Override
     public GameResponse score(Integer gameId) throws GameException {
         Game game = gameRepository.findById(gameId).orElseThrow(() -> {
             log.error("Game not found by id {}", gameId);
@@ -67,8 +77,12 @@ public class GameServiceImpl implements GameService {
 
     @Transactional(readOnly = true)
     @Override
-    public GameResponse status(Integer gameId) throws GameException {
-        return score(gameId);
+    public PlayerResponse winner(Integer gameId) throws GameException {
+        Game game = gameRepository.findById(gameId).orElse(null);
+        if(Objects.nonNull(game)){
+           return mapObject(game.getWinnerPlayer(), PlayerResponse.class);
+        }
+        throw new GameException(GAME_FETCH_FAILED.getMessage(), GAME_FETCH_FAILED.getStatusCode());
     }
 
     public Game startGame(Game game) throws GameException {

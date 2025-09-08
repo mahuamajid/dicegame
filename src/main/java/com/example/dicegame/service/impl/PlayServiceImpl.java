@@ -5,6 +5,7 @@ import com.example.dicegame.constant.State;
 import com.example.dicegame.model.entity.Game;
 import com.example.dicegame.model.entity.Player;
 import com.example.dicegame.repository.GameRepository;
+import com.example.dicegame.service.PlayService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
