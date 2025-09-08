@@ -87,13 +87,15 @@ public class GameServiceImpl implements GameService {
     @Transactional(readOnly = true)
     @Override
     public PlayerResponse winner(Integer gameId) throws GameException {
-        LinkedHashMap redisData = (LinkedHashMap) redisTemplate.opsForValue().get(GAME_KAY+gameId);
-        return radisObjectMapper.convertValue(redisData, PlayerResponse.class);
-//        Game game = getById(gameId);
-//        if (Objects.nonNull(game.getWinnerPlayer())) {
-//            return mapObject(game.getWinnerPlayer(), PlayerResponse.class);
-//        }
-//        throw new GameException(GAME_NOT_FINISHED.getMessage(), GAME_NOT_FINISHED.getStatusCode());
+        LinkedHashMap redisData = (LinkedHashMap) redisTemplate.opsForValue().get(GAME_KAY + gameId);
+        if (Objects.nonNull(redisData)) {
+            return radisObjectMapper.convertValue(redisData, PlayerResponse.class);
+        }
+        Game game = getById(gameId);
+        if (Objects.nonNull(game.getWinnerPlayer())) {
+            return mapObject(game.getWinnerPlayer(), PlayerResponse.class);
+        }
+        throw new GameException(GAME_NOT_FINISHED.getMessage(), GAME_NOT_FINISHED.getStatusCode());
     }
 
     public void startGame(Game game) throws GameException {
@@ -109,7 +111,7 @@ public class GameServiceImpl implements GameService {
     }
 
     public List<GamePlayer> getGamePlayer(Integer gameId) {
-       return gamePlayerRepository.findByGameId(gameId);
+        return gamePlayerRepository.findByGameId(gameId);
     }
 
     public void addPlayerInGame(Game game, GameRequest gameRequest) throws GameException {
