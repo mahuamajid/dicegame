@@ -18,6 +18,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 import static com.example.dicegame.model.dto.response.base.ApiResponseFactory.buildPaginatedResponse;
+import static com.example.dicegame.repository.predicate.PlayerPredicate.build;
 
 @Repository
 @RequiredArgsConstructor
@@ -28,6 +29,7 @@ public class PlayerCustomRepositoryImpl implements PlayerCustomRepository {
     @Override
     public PaginatedResponse<PlayerResponse> pageData(PlayerSearchRequest searchRequest) throws PlayerException {
         Pageable pageable = PageRequest.of(searchRequest.getPage(), searchRequest.getSize());
+        var predicate = build(searchRequest);
         int offset = searchRequest.getPage() * searchRequest.getSize();
         List<PlayerResponse> playerResponseList = queryFactory
                 .select(Projections.fields(PlayerResponse.class,
@@ -38,6 +40,7 @@ public class PlayerCustomRepositoryImpl implements PlayerCustomRepository {
                         qPlayer.state
                 ))
                 .from(qPlayer)
+                .where(predicate)
                 .orderBy(qPlayer.id.asc())
                 .offset(offset)
                 .limit(searchRequest.getSize())
