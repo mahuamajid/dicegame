@@ -61,16 +61,13 @@ public class GameServiceImpl implements GameService {
     @Transactional(readOnly = true)
     @Override
     public GameResponse score(Integer gameId) throws GameException {
-        Game game = gameRepository.findById(gameId).orElseThrow(() -> {
-            log.error("Game not found by id {}", gameId);
-            return new GameException(GAME_FETCH_FAILED.getMessage(), GAME_FETCH_FAILED.getStatusCode());
-        });
+        Game game = getById(gameId);
         List<GamePlayer> gamePlayerList = gamePlayerRepository.findByGameId(gameId);
-        Map<Integer,PlayerResponse> playerResponseMap = gamePlayerList.stream()
+        Map<Integer, PlayerResponse> playerResponseMap = gamePlayerList.stream()
                 .map(gamePlayer -> mapObject(gamePlayer.getPlayer(), PlayerResponse.class))
                 .collect(Collectors.toMap(PlayerResponse::getId, playerResponse -> playerResponse));
         GameResponse gameResponse = mapObject(game, GameResponse.class);
-        Optional.ofNullable(game.getWinnerPlayer()).ifPresent(player ->  gameResponse.setWinnerPlayer(playerResponseMap.get(player.getId())));
+        Optional.ofNullable(game.getWinnerPlayer()).ifPresent(player -> gameResponse.setWinnerPlayer(playerResponseMap.get(player.getId())));
         gameResponse.setPlayerResponseList(playerResponseMap.values().stream().toList());
         return gameResponse;
     }
@@ -78,11 +75,11 @@ public class GameServiceImpl implements GameService {
     @Transactional(readOnly = true)
     @Override
     public PlayerResponse winner(Integer gameId) throws GameException {
-        Game game = gameRepository.findById(gameId).orElse(null);
-        if(Objects.nonNull(game)){
-           return mapObject(game.getWinnerPlayer(), PlayerResponse.class);
+        Game game = getById(gameId);
+        if (Objects.nonNull(game.getWinnerPlayer())) {
+            return mapObject(game.getWinnerPlayer(), PlayerResponse.class);
         }
-        throw new GameException(GAME_FETCH_FAILED.getMessage(), GAME_FETCH_FAILED.getStatusCode());
+        throw new GameException(GAME_NOT_FINISHED.getMessage(), GAME_NOT_FINISHED.getStatusCode());
     }
 
     public Game startGame(Game game) throws GameException {
@@ -103,7 +100,7 @@ public class GameServiceImpl implements GameService {
             log.info("Game already started");
             return;
         }
-        if(CollectionUtils.isEmpty(game.getPlayers())){
+        if (CollectionUtils.isEmpty(game.getPlayers())) {
             saveDataInGamePlayer(game, gameRequest.getPlayerIds());
             return;
         }
@@ -127,25 +124,20 @@ public class GameServiceImpl implements GameService {
                 .build());
     }
 
-    public void reset(Integer gameId) {
-        //TODO parameter could be game here
-        Game game = gameRepository.findById(gameId)
-                .orElseThrow(() -> new RuntimeException("Game not found"));
-        gamePlayerRepository.findByGameId(gameId).forEach(gamePlayerRepository::delete);
-        game.setStarted(false);
-        game.setFinished(false);
-        game.setTargetScore(appProperties.getTargetScore());
-        game.setWinnerPlayer(null);
-        gameRepository.save(game);
+    public Game getById(Integer gameId) throws GameException {
+        return gameRepository.findById(gameId).orElseThrow(() -> {
+            log.error("Game not found by id {}", gameId);
+            return new GameException(GAME_FETCH_FAILED.getMessage(), GAME_FETCH_FAILED.getStatusCode());
+        });
     }
 
     public void saveDataInGamePlayer(Game game, Set<Integer> playerIds) {
         List<Player> playerList = playerRepository.findByIdIn(playerIds.stream().toList());
-        playerList.stream().peek(player ->
+        playerList.forEach(player ->
                 gamePlayerRepository.save(GamePlayer.builder()
                         .game(game)
                         .player(player)
-                        .build())).collect(Collectors.toSet());
+                        .build()));
     }
 
     private Set<Integer> validatePlayerListForGame(Game game, Set<Integer> newPlayerIds) throws GameException {
