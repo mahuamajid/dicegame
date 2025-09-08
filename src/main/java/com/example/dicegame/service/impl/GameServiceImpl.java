@@ -15,8 +15,10 @@ import com.example.dicegame.repository.GamePlayerRepository;
 import com.example.dicegame.repository.PlayerRepository;
 import com.example.dicegame.service.GameService;
 import com.example.dicegame.service.PlayService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -24,6 +26,7 @@ import org.springframework.util.CollectionUtils;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.example.dicegame.constant.AppConstant.GAME_KAY;
 import static com.example.dicegame.constant.GameStatusDictionary.*;
 import static com.example.dicegame.util.ObjectUtil.mapObject;
 
@@ -36,6 +39,8 @@ public class GameServiceImpl implements GameService {
     private final GamePlayerRepository gamePlayerRepository;
     private final AppProperties appProperties;
     private final PlayService playService;
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final ObjectMapper radisObjectMapper;
 
     @Transactional
     @Override
@@ -82,11 +87,13 @@ public class GameServiceImpl implements GameService {
     @Transactional(readOnly = true)
     @Override
     public PlayerResponse winner(Integer gameId) throws GameException {
-        Game game = getById(gameId);
-        if (Objects.nonNull(game.getWinnerPlayer())) {
-            return mapObject(game.getWinnerPlayer(), PlayerResponse.class);
-        }
-        throw new GameException(GAME_NOT_FINISHED.getMessage(), GAME_NOT_FINISHED.getStatusCode());
+        LinkedHashMap redisData = (LinkedHashMap) redisTemplate.opsForValue().get(GAME_KAY+gameId);
+        return radisObjectMapper.convertValue(redisData, PlayerResponse.class);
+//        Game game = getById(gameId);
+//        if (Objects.nonNull(game.getWinnerPlayer())) {
+//            return mapObject(game.getWinnerPlayer(), PlayerResponse.class);
+//        }
+//        throw new GameException(GAME_NOT_FINISHED.getMessage(), GAME_NOT_FINISHED.getStatusCode());
     }
 
     public void startGame(Game game) throws GameException {

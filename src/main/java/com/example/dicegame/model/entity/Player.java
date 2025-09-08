@@ -3,6 +3,7 @@ package com.example.dicegame.model.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,6 +26,9 @@ public class Player {
 
     @Column(name = "age", nullable = false)
     private int age;
+
+    @Column(name = "create_time")
+    private Instant createTime;
 
     @ManyToMany
     @JoinTable(

@@ -2,12 +2,14 @@ package com.example.dicegame.service.impl;
 
 import com.example.dicegame.client.support.RollDiceSupport;
 import com.example.dicegame.constant.State;
+import com.example.dicegame.model.dto.response.PlayerResponse;
 import com.example.dicegame.model.entity.Game;
 import com.example.dicegame.model.entity.GamePlayer;
 import com.example.dicegame.repository.GamePlayerRepository;
 import com.example.dicegame.repository.GameRepository;
 import com.example.dicegame.service.PlayService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,19 +17,26 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.example.dicegame.constant.AppConstant.GAME_KAY;
+import static com.example.dicegame.util.ObjectUtil.mapObject;
+
 @Service
 @Slf4j
 public class PlayServiceImpl implements PlayService {
-    private final GameRepository gameRepository;
-    private final GamePlayerRepository gamePlayerRepository;
-    private final RollDiceSupport rollDiceSupport;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final AtomicBoolean engineRunning = new AtomicBoolean(false);
 
-    PlayServiceImpl(GameRepository gameRepository, GamePlayerRepository gamePlayerRepository, RollDiceSupport rollDiceSupport) {
+    private final GameRepository gameRepository;
+    private final GamePlayerRepository gamePlayerRepository;
+    private final RollDiceSupport rollDiceSupport;
+    private final RedisTemplate<String, Object> redisTemplate;
+
+    PlayServiceImpl(GameRepository gameRepository, GamePlayerRepository gamePlayerRepository,
+                    RollDiceSupport rollDiceSupport, RedisTemplate<String, Object> redisTemplate) {
         this.gameRepository = gameRepository;
         this.gamePlayerRepository = gamePlayerRepository;
         this.rollDiceSupport = rollDiceSupport;
+        this.redisTemplate = redisTemplate;
     }
 
     @Override
@@ -85,7 +94,7 @@ public class PlayServiceImpl implements PlayService {
                 }
             }
             case START_ROLL -> {
-            // should not happen; handled immediately above
+                // should not happen; handled immediately above
             }
             case ACTIVE -> {
                 logPlayersRollValue(gamePlayer, value);
@@ -120,10 +129,12 @@ public class PlayServiceImpl implements PlayService {
             game.setFinished(true);
             game.setWinnerPlayer(gamePlayer.getPlayer());
             gameRepository.save(game);
+            redisTemplate.opsForValue().set(GAME_KAY + game.getId(), mapObject(gamePlayer.getPlayer(), PlayerResponse.class));
         }
     }
 
     private void logPlayersRollValue(GamePlayer gamePlayer, int value) {
-        log.info("Player name:{}, Total Score:{}, Current Value of Dice:{}", gamePlayer.getPlayer().getPlayerName(), gamePlayer.getScore(), value);
+        log.info("Player name:{}, Total Score:{}, Current Value of Dice:{}", gamePlayer.getPlayer().getPlayerName(),
+                gamePlayer.getScore(), value);
     }
 }

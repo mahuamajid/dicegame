@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.Optional;
 
 import static com.example.dicegame.constant.PlayerStatusDictionary.PLAYER_REQUEST_NULL;
@@ -29,8 +30,9 @@ public class PlayerServiceImpl implements PlayerService {
     public PlayerResponse createPlayer(PlayerRequest playerRequest) throws PlayerException {
         return Optional.ofNullable(playerRequest)
                 .map(req -> {
-                    Player p = playerRepository.save(mapObject(req, Player.class));
-                    return mapObject(p, PlayerResponse.class);
+                   Player player = mapObject(req, Player.class);
+                    player.setCreateTime(Instant.now());
+                    return mapObject(playerRepository.save(player), PlayerResponse.class);
                 })
                 .orElseThrow(()-> new PlayerException(PLAYER_REQUEST_NULL.getMessage(),
                         PLAYER_REQUEST_NULL.getStatusCode()));

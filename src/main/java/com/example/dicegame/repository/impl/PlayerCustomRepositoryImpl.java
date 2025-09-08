@@ -35,7 +35,8 @@ public class PlayerCustomRepositoryImpl implements PlayerCustomRepository {
                 .select(Projections.fields(PlayerResponse.class,
                         qPlayer.id,
                         qPlayer.playerName,
-                        qPlayer.age
+                        qPlayer.age,
+                        qPlayer.createTime
                 ))
                 .from(qPlayer)
                 .where(predicate)
