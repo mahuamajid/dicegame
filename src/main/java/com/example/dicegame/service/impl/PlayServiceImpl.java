@@ -1,12 +1,12 @@
 package com.example.dicegame.service.impl;
 
 import com.example.dicegame.client.support.RollDiceSupport;
-import com.example.dicegame.constant.State;
 import com.example.dicegame.model.dto.response.PlayerResponse;
 import com.example.dicegame.model.entity.Game;
 import com.example.dicegame.model.entity.GamePlayer;
 import com.example.dicegame.repository.GamePlayerRepository;
 import com.example.dicegame.repository.GameRepository;
+import com.example.dicegame.repository.PlayerRepository;
 import com.example.dicegame.service.PlayService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -18,6 +18,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.example.dicegame.constant.AppConstant.GAME_KAY;
+import static com.example.dicegame.constant.State.*;
 import static com.example.dicegame.util.ObjectUtil.mapObject;
 
 @Service
@@ -27,13 +28,15 @@ public class PlayServiceImpl implements PlayService {
     private final AtomicBoolean engineRunning = new AtomicBoolean(false);
 
     private final GameRepository gameRepository;
+    private final PlayerRepository playerRepository;
     private final GamePlayerRepository gamePlayerRepository;
     private final RollDiceSupport rollDiceSupport;
     private final RedisTemplate<String, Object> redisTemplate;
 
-    PlayServiceImpl(GameRepository gameRepository, GamePlayerRepository gamePlayerRepository,
+    PlayServiceImpl(GameRepository gameRepository, PlayerRepository playerRepository, GamePlayerRepository gamePlayerRepository,
                     RollDiceSupport rollDiceSupport, RedisTemplate<String, Object> redisTemplate) {
         this.gameRepository = gameRepository;
+        this.playerRepository = playerRepository;
         this.gamePlayerRepository = gamePlayerRepository;
         this.rollDiceSupport = rollDiceSupport;
         this.redisTemplate = redisTemplate;
@@ -58,14 +61,16 @@ public class PlayServiceImpl implements PlayService {
         try {
             int idx = 0;
             while (!game.isFinished()) {
-                GamePlayer player = gamePlayerList.get(idx % gamePlayerList.size());
-                tickTurn(game, player);
+                GamePlayer gamePlayer = gamePlayerList.get(idx % gamePlayerList.size());
+                tickTurn(game, gamePlayer);
                 Thread.sleep(300);// small delay to make /scores polling meaningful and keep CPU low
                 idx++;
             }
             gamePlayerRepository.saveAll(gamePlayerList);
         } catch (InterruptedException ignored) {
         } finally {
+            game.getPlayers().forEach(gamePlayer -> gamePlayer.setState(AVAILABLE));
+            playerRepository.saveAll(game.getPlayers());
             engineRunning.set(false);
         }
     }
@@ -75,21 +80,21 @@ public class PlayServiceImpl implements PlayService {
 
         int value = rollDiceSupport.roll();
 
-        switch (gamePlayer.getState()) {
+        switch (gamePlayer.getPlayer().getState()) {
             case BEFORE_START -> {
                 if (value == 6) {
                     logPlayersRollValue(gamePlayer, value);
-                    gamePlayer.setState(State.START_ROLL);
+                    gamePlayer.getPlayer().setState(START_ROLL);
                     int startRoll = rollDiceSupport.roll();
                     logPlayersRollValue(gamePlayer, startRoll);
                     if (startRoll == 6) {
                         // starting point 0
                     } else if (startRoll == 4) {
                         // special rule: no -4, but must roll another 6 to start accumulating points
-                        gamePlayer.setState(State.BEFORE_START);
+                        gamePlayer.getPlayer().setState(BEFORE_START);
                     } else {
                         gamePlayer.setScore(gamePlayer.getScore() + startRoll);
-                        gamePlayer.setState(State.ACTIVE);
+                        gamePlayer.getPlayer().setState(ACTIVE);
                         checkWin(game, gamePlayer);
                     }
                 } else {

@@ -1,6 +1,7 @@
 package com.example.dicegame.service.impl;
 
 import com.example.dicegame.config.AppProperties;
+import com.example.dicegame.constant.State;
 import com.example.dicegame.exception.GameException;
 import com.example.dicegame.model.dto.request.GameRequest;
 import com.example.dicegame.model.dto.response.GameResponse;
@@ -176,11 +177,16 @@ public class GameServiceImpl implements GameService {
 
     public void saveDataInGamePlayer(Game game, Set<Integer> playerIds) {
         List<Player> playerList = playerRepository.findByIdIn(playerIds.stream().toList());
-        playerList.forEach(player ->
-                gamePlayerRepository.save(GamePlayer.builder()
-                        .game(game)
-                        .player(player)
-                        .build()));
+        playerList.stream()
+                .filter(player -> State.AVAILABLE.equals(player.getState()))
+                .forEach(player -> {
+            player.setState(State.BEFORE_START);
+            playerRepository.save(player);
+            gamePlayerRepository.save(GamePlayer.builder()
+                    .game(game)
+                    .player(player)
+                    .build());
+        });
     }
 
     private Set<Integer> validatePlayerListForGame(Game game, Set<Integer> newPlayerIds) throws GameException {

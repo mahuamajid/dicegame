@@ -1,5 +1,6 @@
 package com.example.dicegame.model.entity;
 
+import com.example.dicegame.constant.State;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -26,6 +27,11 @@ public class Player {
 
     @Column(name = "age", nullable = false)
     private int age;
+
+    @Column(name = "state", nullable = false)
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    private State state = State.AVAILABLE;
 
     @Column(name = "create_time")
     private Instant createTime;
