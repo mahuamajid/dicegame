@@ -6,7 +6,8 @@ import org.springframework.context.annotation.Configuration;
 
 @Data
 @Configuration
-@ConfigurationProperties(prefix = "kafka.topic")
+@ConfigurationProperties(prefix = "kafka.topics")
 public class KafkaTopicProperties {
-    private String prizeTopic;
+    private String gameTopic;
+    private String gamePrizeTopic;
 }

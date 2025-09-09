@@ -1,7 +1,7 @@
 package com.example.dicegame.service.impl;
 
 import com.example.dicegame.config.AppConfig;
-import com.example.dicegame.constant.State;
+import com.example.dicegame.model.enums.State;
 import com.example.dicegame.exception.GameException;
 import com.example.dicegame.model.dto.request.GameRequest;
 import com.example.dicegame.model.dto.response.GameResponse;
@@ -11,6 +11,7 @@ import com.example.dicegame.model.dto.response.StartGameResponse;
 import com.example.dicegame.model.entity.Game;
 import com.example.dicegame.model.entity.GamePlayer;
 import com.example.dicegame.model.entity.Player;
+import com.example.dicegame.model.event.NotificationEvent;
 import com.example.dicegame.repository.GameRepository;
 import com.example.dicegame.repository.GamePlayerRepository;
 import com.example.dicegame.repository.PlayerRepository;
@@ -33,7 +34,7 @@ import java.util.stream.Collectors;
 
 import static com.example.dicegame.constant.AppConstant.GAME_KAY;
 import static com.example.dicegame.constant.AppConstant.GAME_LOCK_KEY;
-import static com.example.dicegame.constant.GameStateType.STARTED;
+import static com.example.dicegame.model.enums.GameStateType.STARTED;
 import static com.example.dicegame.constant.GameStatusDictionary.*;
 import static com.example.dicegame.model.template.NotificationTemplate.gameStartTemplate;
 import static com.example.dicegame.util.ObjectUtil.mapObject;
@@ -120,7 +121,13 @@ public class GameServiceImpl implements GameService {
             game.setStarted(Boolean.TRUE);
             gameRepository.save(game);
         }
-        notificationService.send(game.getGameName(), gameStartTemplate(game.getGameName()), STARTED);
+        NotificationEvent event = NotificationEvent.builder()
+                .gameName(game.getGameName())
+                .data(gameStartTemplate(game.getGameName()))
+                .gameStateType(STARTED)
+                .timestamp(System.currentTimeMillis())
+                .build();
+        notificationService.send(event);
     }
 
     public List<GamePlayer> getGamePlayer(Integer gameId) {

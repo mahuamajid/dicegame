@@ -1,8 +1,8 @@
 package com.example.dicegame.service.impl;
 
 import com.example.dicegame.config.KafkaTopicProperties;
-import com.example.dicegame.constant.GameStateType;
-import com.example.dicegame.model.event.PrizeEvent;
+import com.example.dicegame.model.event.NotificationEvent;
+import com.example.dicegame.model.event.PrizeNotificationEvent;
 import com.example.dicegame.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,24 +14,30 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Slf4j
 public class NotificationServiceImpl implements NotificationService {
-    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final KafkaTemplate<String, NotificationEvent> kafkaTemplate;
     private final KafkaTopicProperties kafkaTopicProperties;
 
     @Override
     @Async()
-    public void send(String gameName, String data, GameStateType gameStateType) {
+    public void send(NotificationEvent event) {
         try {
-            PrizeEvent event = PrizeEvent.builder()
-                    .gameName(gameName)
-                    .data(data)
-                    .gameStateType(gameStateType)
-                    .timestamp(System.currentTimeMillis())
-                    .build();
-            log.info("{} event Topic: {}", gameStateType, kafkaTopicProperties.getPrizeTopic());
-            kafkaTemplate.send(kafkaTopicProperties.getPrizeTopic(), gameName, event);
-            log.info("{} event produced to Kafka for game: {}", gameStateType, gameName);
+            log.info("{} event Topic: {}", event.getGameStateType(), kafkaTopicProperties.getGameTopic());
+            kafkaTemplate.send(kafkaTopicProperties.getGameTopic(), event.getGameName(), event);
+            log.info("{} event produced to Kafka for game: {}", event.getGameStateType(), event.getGameName());
         } catch (Exception e) {
-            log.error("Failed to send {} event to Kafka for game: {}", gameStateType, gameName, e);
+            log.error("Failed to send {} event to Kafka for game: {}", event.getGameStateType(), event.getGameName(), e);
+        }
+    }
+
+    @Override
+    @Async()
+    public void sendForPrize(PrizeNotificationEvent event) {
+        try {
+            log.info("{} event Topic: {}", event.getGameStateType(), kafkaTopicProperties.getGameTopic());
+            kafkaTemplate.send(kafkaTopicProperties.getGamePrizeTopic(), event.getGameName(), event);
+            log.info("{} event produced to Kafka for game: {}", event.getGameStateType(), event.getGameName());
+        } catch (Exception e) {
+            log.error("Failed to send {} event to Kafka for game: {}", event.getGameStateType(), event.getGameName(), e);
         }
     }
 }

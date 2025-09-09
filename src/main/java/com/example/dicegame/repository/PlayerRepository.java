@@ -1,6 +1,6 @@
 package com.example.dicegame.repository;
 
-import com.example.dicegame.constant.State;
+import com.example.dicegame.model.enums.State;
 import com.example.dicegame.model.entity.Player;
 import org.springframework.data.jpa.repository.JpaRepository;
 

@@ -1,4 +1,4 @@
-package com.example.dicegame.constant;
+package com.example.dicegame.model.enums;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

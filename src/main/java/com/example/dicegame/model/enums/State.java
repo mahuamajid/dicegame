@@ -1,4 +1,4 @@
-package com.example.dicegame.constant;
+package com.example.dicegame.model.enums;
 
 public enum State {
     AVAILABLE,

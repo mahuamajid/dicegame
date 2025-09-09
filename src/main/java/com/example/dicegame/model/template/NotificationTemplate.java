@@ -14,7 +14,7 @@ public class NotificationTemplate {
     }
 
     public static String gameEndTemplate(String playerName, String gameName, int score) {
-        return String.format("The game: %s has ended! Winner: %s with a total score of %d!", playerName, gameName, score);
+        return String.format("The game: %s has ended! Winner: %s with a total score of %d!", gameName, playerName, score);
     }
 
     public static String prizeTemplate(String playerName, String gameName, int score) {

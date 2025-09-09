@@ -1,6 +1,6 @@
 package com.example.dicegame.model.dto.response;
 
-import com.example.dicegame.constant.State;
+import com.example.dicegame.model.enums.State;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;

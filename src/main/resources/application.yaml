@@ -21,16 +21,19 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
-    show-sql: true
+    show-sql: false
   kafka:
     consumer:
-      bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-      group-id: subscription-status-consumer-group
+      bootstrap-servers: localhost:9092
+      group-id: dice-game-group
       auto-offset-reset: latest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.value.default.type: com.example.dicegame.model.event.NotificationEvent
+        spring.json.trusted.packages: "*"   # allow all packages
     producer:
-      bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+      bootstrap-servers: localhost:9092
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
   flyway:
@@ -59,13 +62,16 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
     enabled: true
+    try-it-out-enabled: true
+    disable-swagger-default-url: true
+  show-actuator: true
 
 logging:
   level:
     root: INFO
-    com.example.dicegame: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.springframework.jdbc.core.JdbcTemplate: DEBUG
+    com.example.dicegame: INFO
+    org.hibernate.SQL: INFO
+    org.springframework.jdbc.core.JdbcTemplate: INFO
 
 app:
   target-score: 25 # default
@@ -73,7 +79,8 @@ app:
 
 kafka:
   topics:
-    prize-topic: prize-topic
+    game-topic: game-topic
+    game-prize-topic: game-prize-topic
 
 feign:
   client:

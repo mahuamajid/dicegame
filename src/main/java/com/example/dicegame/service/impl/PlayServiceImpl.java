@@ -6,6 +6,8 @@ import com.example.dicegame.model.dto.response.PlayerResponse;
 import com.example.dicegame.model.entity.Game;
 import com.example.dicegame.model.entity.GamePlayer;
 import com.example.dicegame.model.entity.Player;
+import com.example.dicegame.model.event.NotificationEvent;
+import com.example.dicegame.model.event.PrizeNotificationEvent;
 import com.example.dicegame.repository.GamePlayerRepository;
 import com.example.dicegame.repository.GameRepository;
 import com.example.dicegame.repository.PlayerRepository;
@@ -23,9 +25,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.example.dicegame.constant.AppConstant.GAME_KAY;
-import static com.example.dicegame.constant.GameStateType.FINISHED;
-import static com.example.dicegame.constant.GameStateType.PRIZE_GRANTED;
-import static com.example.dicegame.constant.State.*;
+import static com.example.dicegame.model.enums.GameStateType.FINISHED;
+import static com.example.dicegame.model.enums.GameStateType.PRIZE_GRANTED;
+import static com.example.dicegame.model.enums.State.*;
 import static com.example.dicegame.model.template.NotificationTemplate.*;
 import static com.example.dicegame.util.ObjectUtil.mapObject;
 
@@ -166,7 +168,13 @@ public class PlayServiceImpl implements PlayService {
         if (gamePlayer.getScore() >= game.getTargetScore()) {
             game.setFinished(true);
             Player player = gamePlayer.getPlayer();
-            notificationService.send(game.getGameName(), gameEndTemplate(player.getPlayerName(), game.getGameName(), gamePlayer.getScore()), FINISHED);
+            NotificationEvent event = NotificationEvent.builder()
+                    .gameName(game.getGameName())
+                    .data(gameEndTemplate(player.getPlayerName(), game.getGameName(), gamePlayer.getScore()))
+                    .gameStateType(FINISHED)
+                    .timestamp(System.currentTimeMillis())
+                    .build();
+            notificationService.send(event);
             game.setWinnerPlayer(player);
             gameRepository.save(game);
             redisTemplate.opsForValue().set(GAME_KAY + game.getId(), mapObject(player, PlayerResponse.class));
@@ -184,7 +192,14 @@ public class PlayServiceImpl implements PlayService {
         List<GamePlayer> gamePlayerList = gamePlayerRepository.findByGameIn(gameList);
         int score = gamePlayerList.stream().mapToInt(GamePlayer::getScore).sum();
         if (score >= appConfig.getPrizeScore()) {
-            notificationService.send(game.getGameName(), prizeTemplate(player.getPlayerName(), game.getGameName(), score), PRIZE_GRANTED);
+            PrizeNotificationEvent event = PrizeNotificationEvent.builder()
+                    .gameName(game.getGameName())
+                    .playerId(player.getId())
+                    .data(prizeTemplate(player.getPlayerName(), game.getGameName(), score))
+                    .gameStateType(PRIZE_GRANTED)
+                    .timestamp(System.currentTimeMillis())
+                    .build();
+            notificationService.sendForPrize(event);
         }
     }
 }

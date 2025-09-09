@@ -1,6 +1,6 @@
 package com.example.dicegame.model.entity;
 
-import com.example.dicegame.constant.State;
+import com.example.dicegame.model.enums.State;
 import jakarta.persistence.*;
 import lombok.*;
 
