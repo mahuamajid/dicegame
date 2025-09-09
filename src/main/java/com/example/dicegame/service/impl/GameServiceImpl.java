@@ -52,32 +52,15 @@ public class GameServiceImpl implements GameService {
     @Transactional
     @Override
     public StartGameResponse start(GameRequest gameRequest) throws GameException {
-        RLock lock = redissonClient.getLock(GAME_LOCK_KEY + gameRequest.getGameName());
-        boolean acquired = false;
-        try {
-            acquired = lock.tryLock(5, 0, TimeUnit.SECONDS); // wait up to 5s, lease 30s (watchdog auto-extends if lease <= 0)
-            if (!acquired) {
-                log.error("Could not acquire game lock");
-                throw new GameException(GAME_LOCK_NOT_ACQUIRED.getMessage(), GAME_LOCK_NOT_ACQUIRED.getStatusCode());
-            }
-            Game game = createGame(gameRequest);
-            addPlayerInGame(game, gameRequest);
-            startGame(game);
-            playService.play(game);
-            return StartGameResponse.builder()
-                    .id(game.getId())
-                    .started(game.isStarted())
-                    .targetScore(game.getTargetScore())
-                    .build();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.error("Interrupted while waiting for game", e);
-            throw new GameException(GAME_LOCK_INTERRUPTED.getMessage(), GAME_LOCK_INTERRUPTED.getStatusCode());
-        } finally {
-            if (acquired && lock.isHeldByCurrentThread()) {
-                lock.unlock();
-            }
-        }
+        Game game = createGame(gameRequest);
+        addPlayerInGame(game, gameRequest);
+        startGame(game);
+        playService.play(game);
+        return StartGameResponse.builder()
+                .id(game.getId())
+                .started(game.isStarted())
+                .targetScore(game.getTargetScore())
+                .build();
     }
 
     @Transactional(readOnly = true)
@@ -175,18 +158,33 @@ public class GameServiceImpl implements GameService {
         });
     }
 
-    public void saveDataInGamePlayer(Game game, Set<Integer> playerIds) {
-        List<Player> playerList = playerRepository.findByIdIn(playerIds.stream().toList());
-        playerList.stream()
-                .filter(player -> State.AVAILABLE.equals(player.getState()))
-                .forEach(player -> {
-            player.setState(State.BEFORE_START);
-            playerRepository.save(player);
-            gamePlayerRepository.save(GamePlayer.builder()
-                    .game(game)
-                    .player(player)
-                    .build());
-        });
+    public void saveDataInGamePlayer(Game game, Set<Integer> playerIds) throws GameException {
+        RLock lock = redissonClient.getLock(GAME_LOCK_KEY + game.getId());
+        boolean acquired = false;
+        try {
+            acquired = lock.tryLock(5, 0, TimeUnit.SECONDS); // wait up to 5s, lease 30s (watchdog auto-extends if lease <= 0)
+            if (!acquired) {
+                log.error("Could not acquire game lock");
+                throw new GameException(GAME_LOCK_NOT_ACQUIRED.getMessage(), GAME_LOCK_NOT_ACQUIRED.getStatusCode());
+            }
+            List<Player> playerList = playerRepository.findByIdInAndState(playerIds.stream().toList(), State.AVAILABLE);
+            playerList.forEach(player -> {
+                player.setState(State.BEFORE_START);
+                playerRepository.save(player);
+                gamePlayerRepository.save(GamePlayer.builder()
+                        .game(game)
+                        .player(player)
+                        .build());
+            });
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("Interrupted while waiting to add player to the game", e);
+            throw new GameException(GAME_LOCK_INTERRUPTED.getMessage(), GAME_LOCK_INTERRUPTED.getStatusCode());
+        } finally {
+            if (acquired && lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
     }
 
     private Set<Integer> validatePlayerListForGame(Game game, Set<Integer> newPlayerIds) throws GameException {

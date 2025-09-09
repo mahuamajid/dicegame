@@ -24,7 +24,7 @@ public enum GameStatusDictionary {
     GAME_INVALID_PLAYER_NUMBER("901-002-2003-1", "Need 2 to 4 players to play"),
     GAME_NOT_FINISHED("901-002-2004-1", "Game not finished yet"),
     GAME_LOCK_NOT_ACQUIRED("901-002-2005-1", "Could not acquire game lock"),
-    GAME_LOCK_INTERRUPTED("901-002-2006-1", "Interrupted while waiting for game"),;
+    GAME_LOCK_INTERRUPTED("901-002-2006-1", "Interrupted while waiting to add player to the game"),;
 
     private final String statusCode;
     private final String message;
