@@ -13,6 +13,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -25,7 +27,7 @@ import static com.example.dicegame.util.ObjectUtil.mapObject;
 @Slf4j
 public class PlayServiceImpl implements PlayService {
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
-    private final AtomicBoolean engineRunning = new AtomicBoolean(false);
+    private final ConcurrentMap<Integer, AtomicBoolean> gameLocks = new ConcurrentHashMap<>();
 
     private final GameRepository gameRepository;
     private final PlayerRepository playerRepository;
@@ -52,9 +54,21 @@ public class PlayServiceImpl implements PlayService {
     }
 
     private void runEngineAsync(Game game, List<GamePlayer> gamePlayerList) {
-        if (engineRunning.get()) return;
-        engineRunning.set(true);
-        executor.submit(() -> engineLoop(game, gamePlayerList));
+        AtomicBoolean running = gameLocks.computeIfAbsent(game.getId(), id -> new AtomicBoolean(false));
+        if (!running.compareAndSet(false, true)) {
+            log.info("Game {} is already running", game.getId());
+            return;
+        }
+        executor.submit(() -> {
+            try {
+                engineLoop(game, gamePlayerList);
+            } finally {
+                game.getPlayers().forEach(gamePlayer -> gamePlayer.setState(AVAILABLE));
+                playerRepository.saveAll(game.getPlayers());
+                running.set(false);
+                gameLocks.remove(game.getId());
+            }
+        });
     }
 
     private void engineLoop(Game game, List<GamePlayer> gamePlayerList) {
@@ -68,10 +82,7 @@ public class PlayServiceImpl implements PlayService {
             }
             gamePlayerRepository.saveAll(gamePlayerList);
         } catch (InterruptedException ignored) {
-        } finally {
-            game.getPlayers().forEach(gamePlayer -> gamePlayer.setState(AVAILABLE));
-            playerRepository.saveAll(game.getPlayers());
-            engineRunning.set(false);
+
         }
     }
 
