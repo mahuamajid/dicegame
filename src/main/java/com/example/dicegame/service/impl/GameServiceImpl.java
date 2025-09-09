@@ -18,15 +18,19 @@ import com.example.dicegame.service.PlayService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.example.dicegame.constant.AppConstant.GAME_KAY;
+import static com.example.dicegame.constant.AppConstant.GAME_LOCK_KEY;
 import static com.example.dicegame.constant.GameStatusDictionary.*;
 import static com.example.dicegame.util.ObjectUtil.mapObject;
 
@@ -34,6 +38,7 @@ import static com.example.dicegame.util.ObjectUtil.mapObject;
 @RequiredArgsConstructor
 @Slf4j
 public class GameServiceImpl implements GameService {
+
     private final GameRepository gameRepository;
     private final PlayerRepository playerRepository;
     private final GamePlayerRepository gamePlayerRepository;
@@ -41,18 +46,36 @@ public class GameServiceImpl implements GameService {
     private final PlayService playService;
     private final RedisTemplate<String, Object> redisTemplate;
     private final ObjectMapper radisObjectMapper;
+    private final RedissonClient redissonClient;
 
     @Transactional
     @Override
     public StartGameResponse start(GameRequest gameRequest) throws GameException {
-        Game game = createGame(gameRequest);
-        addPlayerInGame(game, gameRequest);
-        startGame(game);
-        playService.play(game);
-        return StartGameResponse.builder()
-                .started(game.isStarted())
-                .targetScore(game.getTargetScore())
-                .build();
+        RLock lock = redissonClient.getLock(GAME_LOCK_KEY + gameRequest.getGameName());
+        boolean acquired = false;
+        try {
+            acquired = lock.tryLock(5, 0, TimeUnit.SECONDS); // wait up to 5s, lease 30s (watchdog auto-extends if lease <= 0)
+            if (!acquired) {
+                log.error("Could not acquire game lock");
+                throw new GameException(GAME_LOCK_NOT_ACQUIRED.getMessage(), GAME_LOCK_NOT_ACQUIRED.getStatusCode());
+            }
+            Game game = createGame(gameRequest);
+            addPlayerInGame(game, gameRequest);
+            startGame(game);
+            playService.play(game);
+            return StartGameResponse.builder()
+                    .started(game.isStarted())
+                    .targetScore(game.getTargetScore())
+                    .build();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("Interrupted while waiting for game", e);
+            throw new GameException(GAME_LOCK_INTERRUPTED.getMessage(), GAME_LOCK_INTERRUPTED.getStatusCode());
+        } finally {
+            if (acquired && lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
     }
 
     @Transactional(readOnly = true)

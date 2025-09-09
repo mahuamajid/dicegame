@@ -31,13 +31,17 @@ spring:
     locations: classpath:db/migration
     repair-on-migrate: true
     out-of-order: true
-  data:
-    redis:
-      host: ${SPRING_REDIS_HOST:localhost}
-      port: ${SPRING_REDIS_PORT:6379}
-      password: ${SPRING_REDIS_PASSWORD:}
-      connect-timeout: 2s
-
+  redis:
+    host: ${SPRING_REDIS_HOST:localhost}
+    port: ${SPRING_REDIS_PORT:6379}
+    password: ${SPRING_REDIS_PASSWORD:}
+    connect-timeout: 2s
+redisson:
+  config: |
+    singleServerConfig:
+      address: "redis://127.0.0.1:6379"
+      connectionPoolSize: 16
+      connectionMinimumIdleSize: 4
 springdoc:
   api-docs:
     enabled: true
