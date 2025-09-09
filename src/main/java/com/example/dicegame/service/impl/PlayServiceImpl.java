@@ -10,6 +10,7 @@ import com.example.dicegame.repository.GamePlayerRepository;
 import com.example.dicegame.repository.GameRepository;
 import com.example.dicegame.repository.PlayerRepository;
 import com.example.dicegame.service.PlayService;
+import com.example.dicegame.service.NotificationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -22,7 +23,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.example.dicegame.constant.AppConstant.GAME_KAY;
+import static com.example.dicegame.constant.GameStateType.FINISHED;
+import static com.example.dicegame.constant.GameStateType.PRIZE_GRANTED;
 import static com.example.dicegame.constant.State.*;
+import static com.example.dicegame.model.template.NotificationTemplate.*;
 import static com.example.dicegame.util.ObjectUtil.mapObject;
 
 @Service
@@ -35,15 +39,18 @@ public class PlayServiceImpl implements PlayService {
     private final PlayerRepository playerRepository;
     private final GamePlayerRepository gamePlayerRepository;
     private final AppConfig appConfig;
+    private final NotificationService notificationService;
     private final RollDiceSupport rollDiceSupport;
     private final RedisTemplate<String, Object> redisTemplate;
 
-    PlayServiceImpl(GameRepository gameRepository, PlayerRepository playerRepository, GamePlayerRepository gamePlayerRepository, AppConfig appConfig,
-                    RollDiceSupport rollDiceSupport, RedisTemplate<String, Object> redisTemplate) {
+    PlayServiceImpl(GameRepository gameRepository, PlayerRepository playerRepository, GamePlayerRepository gamePlayerRepository,
+                    AppConfig appConfig, NotificationService notificationService, RollDiceSupport rollDiceSupport,
+                    RedisTemplate<String, Object> redisTemplate) {
         this.gameRepository = gameRepository;
         this.playerRepository = playerRepository;
         this.gamePlayerRepository = gamePlayerRepository;
         this.appConfig = appConfig;
+        this.notificationService = notificationService;
         this.rollDiceSupport = rollDiceSupport;
         this.redisTemplate = redisTemplate;
     }
@@ -159,10 +166,11 @@ public class PlayServiceImpl implements PlayService {
         if (gamePlayer.getScore() >= game.getTargetScore()) {
             game.setFinished(true);
             Player player = gamePlayer.getPlayer();
+            notificationService.send(game.getGameName(), gameEndTemplate(player.getPlayerName(), game.getGameName(), gamePlayer.getScore()), FINISHED);
             game.setWinnerPlayer(player);
             gameRepository.save(game);
             redisTemplate.opsForValue().set(GAME_KAY + game.getId(), mapObject(player, PlayerResponse.class));
-            givePrize(player);
+            givePrize(game, player);
         }
     }
 
@@ -171,12 +179,12 @@ public class PlayServiceImpl implements PlayService {
                 gamePlayer.getScore(), value);
     }
 
-    private void givePrize(Player player) {
+    private void givePrize(Game game, Player player) {
         List<Game> gameList = gameRepository.findByWinnerPlayer(player);
         List<GamePlayer> gamePlayerList = gamePlayerRepository.findByGameIn(gameList);
         int score = gamePlayerList.stream().mapToInt(GamePlayer::getScore).sum();
         if (score >= appConfig.getPrizeScore()) {
-            //TODO kafka for winner's score>100 give prize and then set score 0
+            notificationService.send(game.getGameName(), prizeTemplate(player.getPlayerName(), game.getGameName(), score), PRIZE_GRANTED);
         }
     }
 }

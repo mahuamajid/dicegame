@@ -15,6 +15,7 @@ import com.example.dicegame.repository.GameRepository;
 import com.example.dicegame.repository.GamePlayerRepository;
 import com.example.dicegame.repository.PlayerRepository;
 import com.example.dicegame.service.GameService;
+import com.example.dicegame.service.NotificationService;
 import com.example.dicegame.service.PlayService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +33,9 @@ import java.util.stream.Collectors;
 
 import static com.example.dicegame.constant.AppConstant.GAME_KAY;
 import static com.example.dicegame.constant.AppConstant.GAME_LOCK_KEY;
+import static com.example.dicegame.constant.GameStateType.STARTED;
 import static com.example.dicegame.constant.GameStatusDictionary.*;
+import static com.example.dicegame.model.template.NotificationTemplate.gameStartTemplate;
 import static com.example.dicegame.util.ObjectUtil.mapObject;
 
 @Service
@@ -48,6 +51,7 @@ public class GameServiceImpl implements GameService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final ObjectMapper radisObjectMapper;
     private final RedissonClient redissonClient;
+    private final NotificationService notificationService;
 
     @Transactional
     @Override
@@ -116,6 +120,7 @@ public class GameServiceImpl implements GameService {
             game.setStarted(Boolean.TRUE);
             gameRepository.save(game);
         }
+        notificationService.send(game.getGameName(), gameStartTemplate(game.getGameName()), STARTED);
     }
 
     public List<GamePlayer> getGamePlayer(Integer gameId) {
