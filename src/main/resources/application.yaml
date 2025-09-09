@@ -58,6 +58,7 @@ logging:
 
 app:
   target-score: 25 # default
+  prize-score: 100
 
 feign:
   client:

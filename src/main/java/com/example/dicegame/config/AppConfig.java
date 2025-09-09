@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "app")
 @Getter
 @Setter
-public class AppProperties {
+public class AppConfig {
     private int targetScore = 25;
+    private int prizeScore;
 }

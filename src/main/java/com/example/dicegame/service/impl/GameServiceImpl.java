@@ -1,6 +1,6 @@
 package com.example.dicegame.service.impl;
 
-import com.example.dicegame.config.AppProperties;
+import com.example.dicegame.config.AppConfig;
 import com.example.dicegame.constant.State;
 import com.example.dicegame.exception.GameException;
 import com.example.dicegame.model.dto.request.GameRequest;
@@ -43,7 +43,7 @@ public class GameServiceImpl implements GameService {
     private final GameRepository gameRepository;
     private final PlayerRepository playerRepository;
     private final GamePlayerRepository gamePlayerRepository;
-    private final AppProperties appProperties;
+    private final AppConfig appProperties;
     private final PlayService playService;
     private final RedisTemplate<String, Object> redisTemplate;
     private final ObjectMapper radisObjectMapper;

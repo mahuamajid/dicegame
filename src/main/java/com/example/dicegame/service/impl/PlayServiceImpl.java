@@ -1,6 +1,7 @@
 package com.example.dicegame.service.impl;
 
 import com.example.dicegame.client.support.RollDiceSupport;
+import com.example.dicegame.config.AppConfig;
 import com.example.dicegame.model.dto.response.PlayerResponse;
 import com.example.dicegame.model.entity.Game;
 import com.example.dicegame.model.entity.GamePlayer;
@@ -33,21 +34,23 @@ public class PlayServiceImpl implements PlayService {
     private final GameRepository gameRepository;
     private final PlayerRepository playerRepository;
     private final GamePlayerRepository gamePlayerRepository;
+    private final AppConfig appConfig;
     private final RollDiceSupport rollDiceSupport;
     private final RedisTemplate<String, Object> redisTemplate;
 
-    PlayServiceImpl(GameRepository gameRepository, PlayerRepository playerRepository, GamePlayerRepository gamePlayerRepository,
+    PlayServiceImpl(GameRepository gameRepository, PlayerRepository playerRepository, GamePlayerRepository gamePlayerRepository, AppConfig appConfig,
                     RollDiceSupport rollDiceSupport, RedisTemplate<String, Object> redisTemplate) {
         this.gameRepository = gameRepository;
         this.playerRepository = playerRepository;
         this.gamePlayerRepository = gamePlayerRepository;
+        this.appConfig = appConfig;
         this.rollDiceSupport = rollDiceSupport;
         this.redisTemplate = redisTemplate;
     }
 
     @Override
     public void play(Game game) {
-        if(!game.isStarted()) {
+        if (!game.isStarted()) {
             return;
         }
         List<GamePlayer> gamePlayerList = gamePlayerRepository.findByGameId(game.getId());
@@ -64,13 +67,13 @@ public class PlayServiceImpl implements PlayService {
             try {
                 engineLoop(game, gamePlayerList);
             } finally {
-               List<Player> playerList = gamePlayerList.stream()
-                       .map(gamePlayer -> {
-                           Player player = gamePlayer.getPlayer();
-                           player.setState(AVAILABLE);
-                           return player;
-                       })
-                       .toList();
+                List<Player> playerList = gamePlayerList.stream()
+                        .map(gamePlayer -> {
+                            Player player = gamePlayer.getPlayer();
+                            player.setState(AVAILABLE);
+                            return player;
+                        })
+                        .toList();
                 playerRepository.saveAll(playerList);
                 running.set(false);
                 gameLocks.remove(game.getId());
@@ -98,21 +101,23 @@ public class PlayServiceImpl implements PlayService {
 
         int value = rollDiceSupport.roll();
 
-        switch (gamePlayer.getPlayer().getState()) {
+        Player player = gamePlayer.getPlayer();
+
+        switch (player.getState()) {
             case BEFORE_START -> {
                 if (value == 6) {
                     logPlayersRollValue(gamePlayer, value);
-                    gamePlayer.getPlayer().setState(START_ROLL);
+                    player.setState(START_ROLL);
                     int startRoll = rollDiceSupport.roll();
                     logPlayersRollValue(gamePlayer, startRoll);
                     if (startRoll == 6) {
                         // starting point 0
                     } else if (startRoll == 4) {
                         // special rule: no -4, but must roll another 6 to start accumulating points
-                        gamePlayer.getPlayer().setState(BEFORE_START);
+                        player.setState(BEFORE_START);
                     } else {
                         gamePlayer.setScore(gamePlayer.getScore() + startRoll);
-                        gamePlayer.getPlayer().setState(ACTIVE);
+                        player.setState(ACTIVE);
                         checkWin(game, gamePlayer);
                     }
                 } else {
@@ -153,14 +158,25 @@ public class PlayServiceImpl implements PlayService {
     private void checkWin(Game game, GamePlayer gamePlayer) {
         if (gamePlayer.getScore() >= game.getTargetScore()) {
             game.setFinished(true);
-            game.setWinnerPlayer(gamePlayer.getPlayer());
+            Player player = gamePlayer.getPlayer();
+            game.setWinnerPlayer(player);
             gameRepository.save(game);
-            redisTemplate.opsForValue().set(GAME_KAY + game.getId(), mapObject(gamePlayer.getPlayer(), PlayerResponse.class));
+            redisTemplate.opsForValue().set(GAME_KAY + game.getId(), mapObject(player, PlayerResponse.class));
+            givePrize(player);
         }
     }
 
     private void logPlayersRollValue(GamePlayer gamePlayer, int value) {
         log.info("Player name:{}, Total Score:{}, Current Value of Dice:{}", gamePlayer.getPlayer().getPlayerName(),
                 gamePlayer.getScore(), value);
+    }
+
+    private void givePrize(Player player) {
+        List<Game> gameList = gameRepository.findByWinnerPlayer(player);
+        List<GamePlayer> gamePlayerList = gamePlayerRepository.findByGameIn(gameList);
+        int score = gamePlayerList.stream().mapToInt(GamePlayer::getScore).sum();
+        if (score >= appConfig.getPrizeScore()) {
+            //TODO kafka for winner's score>100 give prize and then set score 0
+        }
     }
 }
