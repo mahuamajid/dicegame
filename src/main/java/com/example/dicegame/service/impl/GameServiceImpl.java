@@ -64,6 +64,7 @@ public class GameServiceImpl implements GameService {
             startGame(game);
             playService.play(game);
             return StartGameResponse.builder()
+                    .id(game.getId())
                     .started(game.isStarted())
                     .targetScore(game.getTargetScore())
                     .build();

@@ -8,6 +8,7 @@ import lombok.*;
 @NoArgsConstructor
 @Builder
 public class StartGameResponse {
+    private Integer id;
     private boolean started;
     private int targetScore;
 }
