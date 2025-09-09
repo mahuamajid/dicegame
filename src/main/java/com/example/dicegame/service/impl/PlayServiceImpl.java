@@ -4,6 +4,7 @@ import com.example.dicegame.client.support.RollDiceSupport;
 import com.example.dicegame.model.dto.response.PlayerResponse;
 import com.example.dicegame.model.entity.Game;
 import com.example.dicegame.model.entity.GamePlayer;
+import com.example.dicegame.model.entity.Player;
 import com.example.dicegame.repository.GamePlayerRepository;
 import com.example.dicegame.repository.GameRepository;
 import com.example.dicegame.repository.PlayerRepository;
@@ -63,8 +64,14 @@ public class PlayServiceImpl implements PlayService {
             try {
                 engineLoop(game, gamePlayerList);
             } finally {
-                game.getPlayers().forEach(gamePlayer -> gamePlayer.setState(AVAILABLE));
-                playerRepository.saveAll(game.getPlayers());
+               List<Player> playerList = gamePlayerList.stream()
+                       .map(gamePlayer -> {
+                           Player player = gamePlayer.getPlayer();
+                           player.setState(AVAILABLE);
+                           return player;
+                       })
+                       .toList();
+                playerRepository.saveAll(playerList);
                 running.set(false);
                 gameLocks.remove(game.getId());
             }
