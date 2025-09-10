@@ -9,5 +9,4 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "kafka.topics")
 public class KafkaTopicProperties {
     private String gameTopic;
-    private String gamePrizeTopic;
 }

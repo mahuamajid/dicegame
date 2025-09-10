@@ -80,7 +80,6 @@ app:
 kafka:
   topics:
     game-topic: game-topic
-    game-prize-topic: game-prize-topic
 
 feign:
   client:

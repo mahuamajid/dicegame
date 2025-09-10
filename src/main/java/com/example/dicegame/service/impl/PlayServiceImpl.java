@@ -7,7 +7,7 @@ import com.example.dicegame.model.entity.Game;
 import com.example.dicegame.model.entity.GamePlayer;
 import com.example.dicegame.model.entity.Player;
 import com.example.dicegame.model.event.NotificationEvent;
-import com.example.dicegame.model.event.PrizeNotificationEvent;
+import com.example.dicegame.repository.GamePlayerCustomRepository;
 import com.example.dicegame.repository.GamePlayerRepository;
 import com.example.dicegame.repository.GameRepository;
 import com.example.dicegame.repository.PlayerRepository;
@@ -16,6 +16,7 @@ import com.example.dicegame.service.NotificationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,23 +41,26 @@ public class PlayServiceImpl implements PlayService {
     private final GameRepository gameRepository;
     private final PlayerRepository playerRepository;
     private final GamePlayerRepository gamePlayerRepository;
+    private final GamePlayerCustomRepository gamePlayerCustomRepository;
     private final AppConfig appConfig;
     private final NotificationService notificationService;
     private final RollDiceSupport rollDiceSupport;
     private final RedisTemplate<String, Object> redisTemplate;
 
     PlayServiceImpl(GameRepository gameRepository, PlayerRepository playerRepository, GamePlayerRepository gamePlayerRepository,
-                    AppConfig appConfig, NotificationService notificationService, RollDiceSupport rollDiceSupport,
-                    RedisTemplate<String, Object> redisTemplate) {
+                    GamePlayerCustomRepository gamePlayerCustomRepository, AppConfig appConfig, NotificationService notificationService,
+                    RollDiceSupport rollDiceSupport, RedisTemplate<String, Object> redisTemplate) {
         this.gameRepository = gameRepository;
         this.playerRepository = playerRepository;
         this.gamePlayerRepository = gamePlayerRepository;
+        this.gamePlayerCustomRepository = gamePlayerCustomRepository;
         this.appConfig = appConfig;
         this.notificationService = notificationService;
         this.rollDiceSupport = rollDiceSupport;
         this.redisTemplate = redisTemplate;
     }
 
+    @Transactional
     @Override
     public void play(Game game) {
         if (!game.isStarted()) {
@@ -66,7 +70,7 @@ public class PlayServiceImpl implements PlayService {
         runEngineAsync(game, gamePlayerList);
     }
 
-    private void runEngineAsync(Game game, List<GamePlayer> gamePlayerList) {
+    public void runEngineAsync(Game game, List<GamePlayer> gamePlayerList) {
         AtomicBoolean running = gameLocks.computeIfAbsent(game.getId(), id -> new AtomicBoolean(false));
         if (!running.compareAndSet(false, true)) {
             log.info("Game {} is already running", game.getId());
@@ -84,13 +88,14 @@ public class PlayServiceImpl implements PlayService {
                         })
                         .toList();
                 playerRepository.saveAll(playerList);
+                givePrize(game);
                 running.set(false);
                 gameLocks.remove(game.getId());
             }
         });
     }
 
-    private void engineLoop(Game game, List<GamePlayer> gamePlayerList) {
+    public void engineLoop(Game game, List<GamePlayer> gamePlayerList) {
         try {
             int idx = 0;
             while (!game.isFinished()) {
@@ -164,10 +169,13 @@ public class PlayServiceImpl implements PlayService {
         checkWin(game, gamePlayer);
     }
 
-    private void checkWin(Game game, GamePlayer gamePlayer) {
+    public void checkWin(Game game, GamePlayer gamePlayer) {
         if (gamePlayer.getScore() >= game.getTargetScore()) {
             game.setFinished(true);
             Player player = gamePlayer.getPlayer();
+            game.setWinnerPlayer(player);
+            gameRepository.save(game);
+            redisTemplate.opsForValue().set(GAME_KAY + game.getId(), mapObject(player, PlayerResponse.class));
             NotificationEvent event = NotificationEvent.builder()
                     .gameName(game.getGameName())
                     .data(gameEndTemplate(player.getPlayerName(), game.getGameName(), gamePlayer.getScore()))
@@ -175,10 +183,6 @@ public class PlayServiceImpl implements PlayService {
                     .timestamp(System.currentTimeMillis())
                     .build();
             notificationService.send(event);
-            game.setWinnerPlayer(player);
-            gameRepository.save(game);
-            redisTemplate.opsForValue().set(GAME_KAY + game.getId(), mapObject(player, PlayerResponse.class));
-            givePrize(game, player);
         }
     }
 
@@ -187,19 +191,17 @@ public class PlayServiceImpl implements PlayService {
                 gamePlayer.getScore(), value);
     }
 
-    private void givePrize(Game game, Player player) {
-        List<Game> gameList = gameRepository.findByWinnerPlayer(player);
-        List<GamePlayer> gamePlayerList = gamePlayerRepository.findByGameIn(gameList);
-        int score = gamePlayerList.stream().mapToInt(GamePlayer::getScore).sum();
+    public void givePrize(Game game) {
+        Player winner = game.getWinnerPlayer();
+        int score = gamePlayerCustomRepository.findByTotalWinnerPlayerScore(winner.getId(), appConfig.getPrizeScore());
         if (score >= appConfig.getPrizeScore()) {
-            PrizeNotificationEvent event = PrizeNotificationEvent.builder()
+            NotificationEvent event = NotificationEvent.builder()
                     .gameName(game.getGameName())
-                    .playerId(player.getId())
-                    .data(prizeTemplate(player.getPlayerName(), game.getGameName(), score))
+                    .data(prizeTemplate(winner.getPlayerName(), game.getGameName(), score))
                     .gameStateType(PRIZE_GRANTED)
                     .timestamp(System.currentTimeMillis())
                     .build();
-            notificationService.sendForPrize(event);
+            notificationService.send(event);
         }
     }
 }
