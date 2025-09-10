@@ -1,0 +1,79 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: dicegame-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: dicegame
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    container_name: dicegame-redis
+    restart: always
+    command: ["redis-server", "--requirepass", ""]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: dicegame-zookeeper
+    restart: always
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: dicegame-kafka
+    restart: always
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+
+  dicegame-app:
+    build: .
+    container_name: dicegame-app
+    restart: always
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+    environment:
+      SPRING_SERVER_PORT: 9080
+      SPRING_POSTGRES_HOST: postgres
+      SPRING_POSTGRES_PORT: 5432
+      SPRING_POSTGRES_DB: dicegame
+      SPRING_POSTGRES_USER: postgres
+      SPRING_POSTGRES_PASSWORD: 1234
+
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_REDIS_PASSWORD:
+
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    ports:
+      - "9080:9080"
+
+volumes:
+  postgres_data:
+  redis_data:

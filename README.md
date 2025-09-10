@@ -18,7 +18,7 @@ mvn clean install
 mvn spring-boot:run
 
 # Build the Docker image using
-
+docker build -t dicegame-app .
 
 # Run the Docker container using
 
