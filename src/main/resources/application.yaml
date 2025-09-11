@@ -50,12 +50,6 @@ spring:
     port: ${SPRING_REDIS_PORT:6379}
     password: ${SPRING_REDIS_PASSWORD:}
     connect-timeout: 2s
-redisson:
-  config: |
-    singleServerConfig:
-      address: "redis://redis:6379"  
-      connectionPoolSize: 16
-      connectionMinimumIdleSize: 4
 springdoc:
   api-docs:
     enabled: true
