@@ -179,7 +179,11 @@ public class GameServiceImpl implements GameService {
                 log.error("Could not acquire game lock");
                 throw new GameException(GAME_LOCK_NOT_ACQUIRED.getMessage(), GAME_LOCK_NOT_ACQUIRED.getStatusCode());
             }
+            log.info("Acquire game lock");
             List<Player> playerList = playerRepository.findByIdInAndState(playerIds.stream().toList(), State.AVAILABLE);
+            if(CollectionUtils.isEmpty(playerList)) {
+                throw new GameException(INVALID_PLAYER_ID.getMessage(), INVALID_PLAYER_ID.getStatusCode());
+            }
             playerList.forEach(player -> {
                 player.setState(State.BEFORE_START);
                 playerRepository.save(player);
