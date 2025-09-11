@@ -44,7 +44,9 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
   dicegame-app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: dicegame-app
     restart: always
     depends_on:
@@ -64,6 +66,9 @@ services:
       SPRING_REDIS_PASSWORD:
 
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      HOST_APP_URL: http://host.docker.internal:8080
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "9080:9080"  # host:container
 
