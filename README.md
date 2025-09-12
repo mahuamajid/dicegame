@@ -1,7 +1,7 @@
 # dice-game
 A family-friendly game
 
-# special message
+# Special Message
 If the sum of your winning game scores is greater than or equal to 100 (configurable), you win a prize!!!
 
 # Tools and Technologies
