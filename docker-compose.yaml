@@ -47,6 +47,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: dicegame-app
     container_name: dicegame-app
     restart: always
     depends_on:

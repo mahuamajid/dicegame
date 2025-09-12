@@ -10,6 +10,8 @@ A family-friendly game
 6. flyway
 7. querydsl
 8. feign client
+9. Redis
+10. kafka
 
 # Build Application
 mvn clean install
@@ -17,11 +19,11 @@ mvn clean install
 # Run Application
 mvn spring-boot:run
 
-# Build the Docker image using
-docker build -t dicegame-app .
+# Build the Docker image and run container using
+docker compose up -d
 
-# Run the Docker container using
-
+# Remove Docker container using
+docker compose down
 
 # swagger-ui
 http://localhost:9080/swagger-ui/index.html
