@@ -11,5 +11,5 @@ import org.springframework.context.annotation.Configuration;
 @Setter
 public class AppConfig {
     private int targetScore = 25;
-    private int prizeScore;
+    private int prizeScore = 100;
 }

@@ -1,6 +1,9 @@
 # dice-game
 A family-friendly game
 
+# special message
+If the sum of your winning game scores is greater than or equal to 100 (configurable), you win a prize!!!
+
 # Tools and Technologies
 1. JDK-21
 2. Spring Boot 3.4.2
@@ -25,11 +28,12 @@ docker compose up -d
 # Remove Docker container using
 docker compose down
 
+# see log
+docker logs dicegame-app -f
+
 # swagger-ui
 http://localhost:9080/swagger-ui/index.html
 
 # api documentation
 http://localhost:9080/v3/api-docs
 
-# Request sample (you can hit from swagger UI)
-curl

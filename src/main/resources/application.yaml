@@ -69,7 +69,7 @@ logging:
 
 app:
   target-score: 25 # default
-  prize-score: 100
+  prize-score: 100 # default
 
 kafka:
   topics:
