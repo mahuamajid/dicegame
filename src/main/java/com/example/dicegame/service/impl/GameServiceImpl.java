@@ -171,7 +171,7 @@ public class GameServiceImpl implements GameService {
     }
 
     public void saveDataInGamePlayer(Game game, Set<Integer> playerIds) throws GameException {
-        RLock lock = redissonClient.getLock(GAME_LOCK_KEY + game.getId());
+        RLock lock = redissonClient.getLock(GAME_LOCK_KEY);
         boolean acquired = false;
         try {
             acquired = lock.tryLock(5, 0, TimeUnit.SECONDS); // wait up to 5s, lease 30s (watchdog auto-extends if lease <= 0)

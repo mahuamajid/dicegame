@@ -5,5 +5,5 @@ public class AppConstant {
     }
 
     public static final String GAME_KAY = "GAME:";
-    public static final String GAME_LOCK_KEY = "GAME:LOCK:";
+    public static final String GAME_LOCK_KEY = "GAME:LOCK";
 }
